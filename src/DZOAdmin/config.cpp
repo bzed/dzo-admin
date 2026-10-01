@@ -20,7 +20,9 @@ class CfgMods
 		name = "DZOAdmin";
 		author = "Bernd Zeimetz";
 		type = "servermod";
-		dependencies[] = {"Game"};
+		dependencies[] = {"Game", "World", "Mission"};
+		// Lets other mods use the marker API behind #ifdef DZO_ADMIN.
+		defines[] = {"DZO_ADMIN"};
 
 		class defs
 		{
@@ -28,6 +30,16 @@ class CfgMods
 			{
 				value = "";
 				files[] = {"DZOAdmin/scripts/3_Game"};
+			};
+			class worldScriptModule
+			{
+				value = "";
+				files[] = {"DZOAdmin/scripts/4_World"};
+			};
+			class missionScriptModule
+			{
+				value = "";
+				files[] = {"DZOAdmin/scripts/5_Mission"};
 			};
 		};
 	};
