@@ -12,7 +12,9 @@ class DZOAdminWorld
 		int b3;
 		int b4;
 		e.GetPersistentID(b1, b2, b3, b4);
-		return b1.ToString() + "." + b2.ToString() + "." + b3.ToString() + "." + b4.ToString();
+		// The "v" keeps ids that start with a minus sign from looking like
+		// command line flags.
+		return "v" + b1.ToString() + "." + b2.ToString() + "." + b3.ToString() + "." + b4.ToString();
 	}
 
 	static PlayerBase FindPlayer(string steamId)
@@ -40,7 +42,7 @@ class DZOAdminWorld
 		return null;
 	}
 
-	static void CollectPlayers(array<ref DZOAdminPlayer> out)
+	static void CollectPlayers(array<ref DZOAdminPlayer> list)
 	{
 		array<Man> men = new array<Man>;
 		GetGame().GetPlayers(men);
@@ -67,11 +69,11 @@ class DZOAdminWorld
 			d.shock = p.GetHealth("GlobalHealth", "Shock");
 			d.alive = p.IsAlive();
 			d.unconscious = p.IsUnconscious();
-			out.Insert(d);
+			list.Insert(d);
 		}
 	}
 
-	static void CollectVehicles(array<ref DZOAdminVehicle> out)
+	static void CollectVehicles(array<ref DZOAdminVehicle> list)
 	{
 		foreach (CarScript c : DZOAdminRegistry.s_Cars)
 		{
@@ -96,11 +98,11 @@ class DZOAdminWorld
 				if (crew && crew.GetIdentity())
 					v.occupants.Insert(crew.GetIdentity().GetPlainId());
 			}
-			out.Insert(v);
+			list.Insert(v);
 		}
 	}
 
-	static void CollectEvents(array<ref DZOAdminEvent> out)
+	static void CollectEvents(array<ref DZOAdminEvent> list)
 	{
 		foreach (EffectArea a : DZOAdminRegistry.s_Areas)
 		{
@@ -116,13 +118,13 @@ class DZOAdminWorld
 			e.z = pos[2];
 			e.radius = a.m_Radius;
 			e.source = "effect_area";
-			out.Insert(e);
+			list.Insert(e);
 		}
 	}
 
 	// SpawnableTypes lists the public item classes of every loaded mod, for
 	// dzo's item picker.
-	static void SpawnableTypes(array<string> out)
+	static void SpawnableTypes(array<string> list)
 	{
 		TStringArray roots = {"CfgVehicles", "CfgWeapons", "CfgMagazines"};
 		foreach (string root : roots)
@@ -137,7 +139,7 @@ class DZOAdminWorld
 				// Only things that can live in an inventory or on the ground.
 				if (root == "CfgVehicles" && !GetGame().IsKindOf(name, "Inventory_Base") && !GetGame().IsKindOf(name, "Clothing_Base"))
 					continue;
-				out.Insert(name);
+				list.Insert(name);
 			}
 		}
 	}

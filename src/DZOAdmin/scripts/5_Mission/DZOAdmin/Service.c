@@ -57,7 +57,7 @@ class DZOAdminService
 			m_Config = null;
 			return;
 		}
-		DZOAdminRegistry.SetRules(m_Config.watch);
+		DZOAdminWatch.SetRules(m_Config.watch);
 		m_Transport = new DZOAdminTransport(m_Config.endpoint);
 		int tick = Math.Max(250, m_Config.sync_ms);
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Tick, tick, true);
@@ -84,10 +84,11 @@ class DZOAdminService
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
 		s.token = m_Config.token;
-		s.proto = DZOADMIN_PROTOCOL_VERSION;
+		s.protocol = DZOADMIN_PROTOCOL_VERSION;
 		s.mod_version = DZOADMIN_VERSION;
 		s.seq = m_Seq;
 		s.hello = m_Hello;
+		s.has = new array<string>;
 		if (m_Hello)
 		{
 			string world;
@@ -96,26 +97,30 @@ class DZOAdminService
 		}
 		if (m_Hello || Due(m_LastPlayers, m_Config.players_s))
 		{
+			s.has.Insert("players");
 			s.players = new array<ref DZOAdminPlayer>;
 			DZOAdminWorld.CollectPlayers(s.players);
 			m_LastPlayers = now;
 		}
 		if (m_Hello || Due(m_LastVehicles, m_Config.vehicles_s))
 		{
+			s.has.Insert("vehicles");
 			s.vehicles = new array<ref DZOAdminVehicle>;
 			DZOAdminWorld.CollectVehicles(s.vehicles);
 			m_LastVehicles = now;
 		}
 		if (m_Hello || Due(m_LastMarkers, m_Config.markers_s))
 		{
+			s.has.Insert("markers");
 			s.markers = new array<ref DZOAdminMarker>;
 			s.layers = new array<ref DZOAdminLayer>;
 			DZOAdmin_Map.Snapshot(s.markers, s.layers);
-			DZOAdminRegistry.WatchMarkers(s.markers);
+			DZOAdminWatch.WatchMarkers(s.markers);
 			m_LastMarkers = now;
 		}
 		if (m_Hello || Due(m_LastEvents, m_Config.events_s))
 		{
+			s.has.Insert("events");
 			s.events = new array<ref DZOAdminEvent>;
 			DZOAdminWorld.CollectEvents(s.events);
 			m_LastEvents = now;
@@ -124,7 +129,8 @@ class DZOAdminService
 		if (m_Results.Count() > 0)
 		{
 			s.results = new array<ref DZOAdminResult>;
-			s.results.Copy(m_Results);
+			foreach (DZOAdminResult r : m_Results)
+				s.results.Insert(r);
 		}
 		m_Seq++;
 		m_Hello = false;

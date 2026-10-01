@@ -130,11 +130,14 @@ class DZOAdminCommand
 class DZOAdminSync
 {
 	string token;
-	int proto;
+	int protocol;
 	string mod_version;
 	string world;
 	int seq;
 	bool hello;
+	// The JSON writer turns a null array into [], so the parts that are
+	// really included are listed here: players, vehicles, markers, events.
+	ref array<string> has;
 	ref array<ref DZOAdminPlayer> players;
 	ref array<ref DZOAdminVehicle> vehicles;
 	ref array<ref DZOAdminMarker> markers;
@@ -148,6 +151,6 @@ class DZOAdminReply
 {
 	bool ok;
 	string error;
-	int proto;
+	int protocol;
 	ref array<ref DZOAdminCommand> commands;
 }

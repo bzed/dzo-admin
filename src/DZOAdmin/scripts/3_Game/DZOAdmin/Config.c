@@ -43,7 +43,8 @@ class DZOAdminConfig
 			if (pattern.Substring(n - 1, 1) == "*")
 			{
 				string prefix = pattern.Substring(0, n - 1);
-				if (type.Substring(0, prefix.Length()) == prefix)
+				// Substring throws when the length exceeds the string.
+				if (type.Length() >= prefix.Length() && type.Substring(0, prefix.Length()) == prefix)
 					return true;
 			}
 			else if (pattern == type)

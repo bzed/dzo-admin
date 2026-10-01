@@ -29,7 +29,7 @@ The mod only connects outbound. Every `sync_ms` it sends
 only set `Content-Type`, so the instance token is a body field, not a header):
 
 ```json
-{"token": "…", "proto": 1, "mod_version": "0.1.0", "seq": 7, "hello": false,
+{"token": "…", "protocol": 1, "mod_version": "0.1.0", "seq": 7, "hello": 0, "has": ["players", "vehicles"],
  "players": [...], "vehicles": [...], "markers": [...], "layers": [...],
  "events": [...], "types": {"hash": "…", "offset": 0, "total": 5000, "names": [...]},
  "results": [{"id": "c1", "ok": true, "message": ""}]}
@@ -38,7 +38,7 @@ only set `Content-Type`, so the instance token is a body field, not a header):
 State fields are only present when due (players every `players_s`, vehicles
 every `vehicles_s`, markers every `markers_s`, events every `events_s`); the
 first sync after a start has `"hello": true` and carries everything. The reply
-is `{"ok": true, "proto": 1, "commands": [...]}`. Commands: `message`,
+is `{"ok": true, "protocol": 1, "commands": [...]}`. Commands: `message`,
 `teleport`, `spawn_item`, `vehicle_repair`, `vehicle_delete`; the field list is
 `DZOAdminCommand` in `Proto.c`. A command id the mod has already executed is
 answered from memory, not executed again.
@@ -51,8 +51,13 @@ code), the `DZOAdmin_Map` API behind `#ifdef DZO_ADMIN`, or JSON files in
 
 ## Status
 
-Written against the 1.29 script API (every class and method checked in
-`api.json` from diff.yadz.app) but **not yet booted**. Needs a boot test before
-a release: no `SCRIPT (E)` lines, the "loaded" line, and a successful sync with
-a fake dzo endpoint. Open questions are listed in the dzo README under "Needs
-live verification".
+Booted headless on DayZ 1.29 against the real dzo endpoint: compiles, loads,
+syncs, and vehicle repair/delete work. Actions that need a connected player
+(message, teleport, spawn_item) are not tested yet. See the dzo README under
+"Needs live verification".
+
+Enforce Script reminders from the boot: `proto` and `out` are reserved words
+(even as field or parameter names), `EntityAI` is an engine class and cannot be
+modded (use `ItemBase`, `CarScript`, ...), and `JsonSerializer` writes bool as
+0/1, a null array as `[]` and a null object as `{}`; the sync body therefore
+lists the parts it includes in `has`.
