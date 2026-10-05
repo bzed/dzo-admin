@@ -153,4 +153,6 @@ class DZOAdminReply
 	string error;
 	int protocol;
 	ref array<ref DZOAdminCommand> commands;
+	// dzo asks for the hello (with the world name) again, e.g. after dzo serve restarted.
+	bool hello;
 }

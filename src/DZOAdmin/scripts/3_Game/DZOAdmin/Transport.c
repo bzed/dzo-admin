@@ -42,6 +42,8 @@ class DZOAdminTransport
 	// Pending command replies, filled by OnReply and drained by the service.
 	ref array<ref DZOAdminCommand> m_Inbox = new array<ref DZOAdminCommand>;
 	bool m_LastOk;
+	// Set by a reply that asks for the hello again; the service sends it and clears the flag.
+	bool m_WantHello;
 
 	void DZOAdminTransport(string endpoint)
 	{
@@ -78,6 +80,8 @@ class DZOAdminTransport
 		string body;
 		m_Json.WriteToString(sync, false, body);
 		m_InFlight = true;
+		// One callback for all requests: the engine never lets go of a callback it was given
+		// (a callback per request left 51 leaked instances at shutdown, one shared leaves one).
 		m_Ctx.POST(m_Callback, "mod/v1/sync", body);
 	}
 
@@ -99,6 +103,8 @@ class DZOAdminTransport
 		m_Failures = 0;
 		m_NextTry = 0;
 		m_LastOk = true;
+		if (reply.hello)
+			m_WantHello = true;
 		if (reply.commands)
 		{
 			foreach (DZOAdminCommand c : reply.commands)

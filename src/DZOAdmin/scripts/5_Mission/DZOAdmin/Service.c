@@ -81,6 +81,11 @@ class DZOAdminService
 			m_Transport.m_Inbox.RemoveOrdered(0);
 			Execute(c);
 		}
+		if (m_Transport.m_WantHello)
+		{
+			m_Hello = true;
+			m_Transport.m_WantHello = false;
+		}
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
 		s.token = m_Config.token;
