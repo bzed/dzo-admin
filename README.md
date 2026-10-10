@@ -51,10 +51,12 @@ code), the `DZOAdmin_Map` API behind `#ifdef DZO_ADMIN`, or JSON files in
 
 ## Status
 
-Booted headless on DayZ 1.29 against the real dzo endpoint: compiles, loads,
-syncs, and vehicle repair/delete work. Actions that need a connected player
-(message, teleport, spawn_item) are not tested yet. See the dzo README under
-"Needs live verification".
+Tested on DayZ 1.29 (stable) and 1.30 (experimental) against the real dzo
+endpoint, with a real DayZ client (`scripts/test-client.sh` in the dzo
+repository): it compiles, loads and syncs; the players state, messages in all
+three styles, teleport, `spawn_item` (inventory, hands, ground), the refusals,
+class watch rules on items, the crew of a vehicle, and vehicle repair/delete
+work. See the dzo README, "Status".
 
 Enforce Script reminders from the boot: `proto` and `out` are reserved words
 (even as field or parameter names), `EntityAI` is an engine class and cannot be
