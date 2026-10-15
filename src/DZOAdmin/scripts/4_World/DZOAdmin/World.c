@@ -108,6 +108,7 @@ class DZOAdminWorld
 
 	static void CollectEvents(array<ref DZOAdminEvent> list)
 	{
+		DZOAdminEventScan.Collect(list);
 		foreach (EffectArea a : DZOAdminRegistry.s_Areas)
 		{
 			if (!a)

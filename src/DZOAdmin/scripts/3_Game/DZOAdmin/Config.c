@@ -13,6 +13,32 @@ class DZOAdminWatchRule
 	int max;
 }
 
+// Where the objects of one Central Economy event are looked for, see EventScan.c. Written by dzo from the
+// mission's cfgeventspawns.xml, cfgeventgroups.xml and db/events.xml.
+class DZOAdminScanSpawn
+{
+	float x;
+	float y;
+	float z;
+	string g;   // a group of the rule whose classes are looked for instead
+}
+
+class DZOAdminScanGroup
+{
+	string name;
+	ref array<string> classes;
+	float radius;
+}
+
+class DZOAdminScanRule
+{
+	string name;     // the event, as in db/events.xml
+	ref array<string> classes;
+	float radius;
+	ref array<ref DZOAdminScanGroup> groups;
+	ref array<ref DZOAdminScanSpawn> spawns;
+}
+
 // $profile:dzo-admin/config.json, written by `dzo instance render` (never in
 // git: it holds the instance token).
 class DZOAdminConfig
@@ -29,6 +55,7 @@ class DZOAdminConfig
 	ref array<string> allow_classes; // empty = every public class
 	ref array<string> deny_classes;
 	ref array<ref DZOAdminWatchRule> watch;
+	ref array<ref DZOAdminScanRule> event_scan;
 
 	// Match reports whether `type` is selected by the glob list `list`.
 	static bool MatchList(array<string> list, string type)
