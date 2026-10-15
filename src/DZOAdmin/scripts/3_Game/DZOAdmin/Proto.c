@@ -26,6 +26,7 @@ class DZOAdminPlayer
 class DZOAdminVehicle
 {
 	string id;
+	string kind;       // car, motorbike
 	string type;
 	float x;
 	float y;

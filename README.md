@@ -56,7 +56,10 @@ endpoint, with a real DayZ client (`scripts/test-client.sh` in the dzo
 repository): it compiles, loads and syncs; the players state, messages in all
 three styles, teleport, `spawn_item` (inventory, hands, ground), the refusals,
 class watch rules on items, the crew of a vehicle, and vehicle repair/delete
-work. See the dzo README, "Status".
+work. On 1.30 motorbikes (`MotorbikeScript`, which is not a `CarScript`) are reported as vehicles
+of `kind` `"motorbike"` (cars are `"car"`) and can be repaired (fuel only) and deleted; that part
+is left out on 1.29, which has no motorbikes, and was verified on 1.30 only. See the dzo README,
+"Status".
 
 Enforce Script reminders from the boot: `proto` and `out` are reserved words
 (even as field or parameter names), `EntityAI` is an engine class and cannot be

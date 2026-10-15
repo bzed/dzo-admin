@@ -81,6 +81,7 @@ class DZOAdminWorld
 				continue;
 			DZOAdminVehicle v = new DZOAdminVehicle();
 			v.id = VehicleId(c);
+			v.kind = "car";
 			v.type = c.GetType();
 			vector pos = c.GetPosition();
 			v.x = pos[0];
@@ -100,6 +101,9 @@ class DZOAdminWorld
 			}
 			list.Insert(v);
 		}
+#ifndef DAYZ_1_29
+		DZOAdminBikes.Collect(list);
+#endif
 	}
 
 	static void CollectEvents(array<ref DZOAdminEvent> list)
@@ -243,7 +247,7 @@ class DZOAdminWorld
 		return "";
 	}
 
-	protected static void RepairEntity(EntityAI e)
+	static void RepairEntity(EntityAI e)
 	{
 		TStringArray zones = new TStringArray;
 		e.GetDamageZones(zones);
@@ -261,12 +265,19 @@ class DZOAdminWorld
 
 	static string VehicleRepair(DZOAdminCommand c)
 	{
-		CarScript car = FindVehicle(c.vehicle);
-		if (!car)
-			return "vehicle not found";
 		string scope = c.scope;
 		if (scope == "")
 			scope = "all";
+		CarScript car = FindVehicle(c.vehicle);
+		if (!car)
+		{
+#ifndef DAYZ_1_29
+			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
+			if (bike)
+				return DZOAdminBikes.Repair(bike, scope);
+#endif
+			return "vehicle not found";
+		}
 		if (scope == "all" || scope == "engine")
 			RepairEntity(car);
 		if (scope == "all" || scope == "parts" || scope == "wheels")
@@ -296,7 +307,19 @@ class DZOAdminWorld
 	{
 		CarScript car = FindVehicle(c.vehicle);
 		if (!car)
+		{
+#ifndef DAYZ_1_29
+			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
+			if (bike)
+			{
+				if (!c.force && bike.IsAnyCrewPresent())
+					return "vehicle has crew inside";
+				GetGame().ObjectDelete(bike);
+				return "";
+			}
+#endif
 			return "vehicle not found";
+		}
 		if (!c.force && car.IsAnyCrewPresent())
 			return "vehicle has crew inside";
 		GetGame().ObjectDelete(car);
