@@ -110,7 +110,7 @@ class DZOAdminResult
 class DZOAdminCommand
 {
 	string id;
-	string kind;       // message, teleport, spawn_item, vehicle_repair, vehicle_delete
+	string kind;       // message, teleport, spawn_item, vehicle_repair, vehicle_flip, vehicle_delete
 	string steam_id;   // target player, "" = everyone (message)
 	string to_steam_id; // teleport to this player
 	string text;
@@ -124,7 +124,7 @@ class DZOAdminCommand
 	float z;
 	bool has_y;
 	string vehicle;    // vehicle id
-	string scope;      // vehicle_repair: all, engine, parts, wheels, fluids
+	string scope;      // vehicle_repair: all, engine, parts, wheels, fluids, missing
 	bool force;        // vehicle_delete: even with crew inside
 }
 

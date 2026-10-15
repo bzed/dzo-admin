@@ -59,6 +59,8 @@ class DZOAdminBikes
 	// Same scopes as for cars. A motorbike only has fuel (MotorbikeFluid has no oil, brake fluid or coolant).
 	static string Repair(MotorbikeScript bike, string scope)
 	{
+		if (scope == "all" || scope == "missing")
+			DZOAdminWorld.AddMissingParts(bike);
 		if (scope == "all" || scope == "engine")
 			DZOAdminWorld.RepairEntity(bike);
 		if (scope == "all" || scope == "parts" || scope == "wheels")

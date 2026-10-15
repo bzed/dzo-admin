@@ -256,6 +256,43 @@ class DZOAdminWorld
 			e.SetHealthMax(z, "");
 	}
 
+	// Fits parts into the slots that are empty. A vehicle of the same class is created out of sight and
+	// given its debug-spawn parts (what vanilla's own admin tools do); whatever it carries in a slot
+	// that is empty on the real vehicle is created there as well, then the donor is deleted again.
+	static void AddMissingParts(EntityAI e)
+	{
+		vector pos = e.GetPosition();
+		pos[1] = pos[1] + 500;
+		EntityAI donor = EntityAI.Cast(GetGame().CreateObjectEx(e.GetType(), pos, ECE_NONE));
+		if (!donor)
+			return;
+		donor.OnDebugSpawn();
+		GameInventory src = donor.GetInventory();
+		GameInventory dst = e.GetInventory();
+		for (int i = 0; src && dst && i < src.AttachmentCount(); i++)
+		{
+			EntityAI part = src.GetAttachmentFromIndex(i);
+			if (!part || part.GetInventory().GetSlotIdCount() == 0)
+				continue;
+			int slot = part.GetInventory().GetSlotId(0);
+			if (!dst.FindAttachment(slot))
+				dst.CreateAttachmentEx(part.GetType(), slot);
+		}
+		GetGame().ObjectDelete(donor);
+	}
+
+	// Stands a vehicle upright on its wheels where it is, keeping its heading.
+	static void FlipEntity(EntityAI e)
+	{
+		vector pos = e.GetPosition();
+		pos[1] = Math.Max(pos[1], GetGame().SurfaceY(pos[0], pos[2])) + 1.0;
+		float yaw = e.GetOrientation()[0];
+		e.SetPosition(pos);
+		e.SetOrientation(Vector(yaw, 0, 0));
+		dBodySetAngularVelocity(e, "0 0 0");
+		dBodyActive(e, ActiveState.ACTIVE);
+	}
+
 	protected static void FillFluid(CarScript car, CarFluid fluid)
 	{
 		float missing = car.GetFluidCapacity(fluid) * (1 - car.GetFluidFraction(fluid));
@@ -278,6 +315,8 @@ class DZOAdminWorld
 #endif
 			return "vehicle not found";
 		}
+		if (scope == "all" || scope == "missing")
+			AddMissingParts(car);
 		if (scope == "all" || scope == "engine")
 			RepairEntity(car);
 		if (scope == "all" || scope == "parts" || scope == "wheels")
@@ -301,6 +340,25 @@ class DZOAdminWorld
 			FillFluid(car, CarFluid.COOLANT);
 		}
 		return "";
+	}
+
+	static string VehicleFlip(DZOAdminCommand c)
+	{
+		CarScript car = FindVehicle(c.vehicle);
+		if (car)
+		{
+			FlipEntity(car);
+			return "";
+		}
+#ifndef DAYZ_1_29
+		MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
+		if (bike)
+		{
+			FlipEntity(bike);
+			return "";
+		}
+#endif
+		return "vehicle not found";
 	}
 
 	static string VehicleDelete(DZOAdminCommand c)

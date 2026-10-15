@@ -193,6 +193,8 @@ class DZOAdminService
 			err = DZOAdminWorld.SpawnItem(c, m_Config);
 		else if (c.kind == "vehicle_repair")
 			err = DZOAdminWorld.VehicleRepair(c);
+		else if (c.kind == "vehicle_flip")
+			err = DZOAdminWorld.VehicleFlip(c);
 		else if (c.kind == "vehicle_delete")
 			err = DZOAdminWorld.VehicleDelete(c);
 		else
