@@ -87,7 +87,7 @@ class DZOAdminService
 			m_Hello = true;
 			m_Transport.m_WantHello = false;
 		}
-		DZOAdminEventScan.Step();
+		DZOAdminEventScan.Step(m_Config.event_scan_s);
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
 		s.token = m_Config.token;

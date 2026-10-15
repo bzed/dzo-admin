@@ -31,12 +31,26 @@ modded class CarScript
 	}
 }
 
+// An area is registered when it is created, not when it goes live: a dynamic zone (a thrown M18
+// smoke grenade) shows up on the map at once, with the radius it gets in DeferredInit.
 modded class EffectArea
 {
+	protected void DZOAdminRegister()
+	{
+		if (GetGame().IsServer() && DZOAdminRegistry.s_Areas.Find(this) == -1)
+			DZOAdminRegistry.s_Areas.Insert(this);
+	}
+
+	override void EEInit()
+	{
+		super.EEInit();
+		DZOAdminRegister();
+	}
+
 	override void InitZoneServer()
 	{
 		super.InitZoneServer();
-		DZOAdminRegistry.s_Areas.Insert(this);
+		DZOAdminRegister();
 	}
 
 	override void EEDelete(EntityAI parent)

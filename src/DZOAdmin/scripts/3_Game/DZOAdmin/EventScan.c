@@ -9,7 +9,6 @@
 // round, so an event that despawned disappears from the list after at most one round.
 class DZOAdminEventScan
 {
-	protected static const int PER_STEP = 40;
 
 	protected static ref array<ref DZOAdminScanRule> s_Rules;
 	// One entry per place, in the order of the rules: the class found there, "" for none.
@@ -17,6 +16,8 @@ class DZOAdminEventScan
 	protected static ref array<int> s_Rule = new array<int>;
 	protected static ref array<int> s_Spawn = new array<int>;
 	protected static int s_Cursor;
+	protected static float s_LastStep;
+	protected static float s_Budget;
 	protected static ref array<Object> s_Objects = new array<Object>;
 	protected static ref array<CargoBase> s_Proxy = new array<CargoBase>;
 
@@ -88,14 +89,21 @@ class DZOAdminEventScan
 		return "";
 	}
 
-	// Looks at the next few places; called every sync tick.
-	static void Step()
+	// Looks at the next places; called every sync tick. The places are spread over the time of a round
+	// (event_scan_s), so a map with many places is not looked at faster than one with few.
+	static void Step(int roundSeconds)
 	{
 		int n = s_Found.Count();
 		if (n == 0)
 			return;
-		for (int i = 0; i < PER_STEP && i < n; i++)
+		float now = GetGame().GetTickTime();
+		if (s_LastStep == 0)
+			s_LastStep = now;
+		s_Budget += n * (now - s_LastStep) / Math.Max(roundSeconds, 1);
+		s_LastStep = now;
+		while (s_Budget >= 1)
 		{
+			s_Budget -= 1;
 			if (s_Cursor >= n)
 				s_Cursor = 0;
 			DZOAdminScanRule rule = s_Rules.Get(s_Rule.Get(s_Cursor));

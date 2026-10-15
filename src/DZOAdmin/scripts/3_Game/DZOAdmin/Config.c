@@ -51,6 +51,7 @@ class DZOAdminConfig
 	int vehicles_s = 60;
 	int markers_s = 10;
 	int events_s = 30;
+	int event_scan_s = 90; // one round over all places of event_scan
 	bool allow_spawn = true;
 	ref array<string> allow_classes; // empty = every public class
 	ref array<string> deny_classes;
