@@ -13,32 +13,6 @@ class DZOAdminWatchRule
 	int max;
 }
 
-// Where the objects of one Central Economy event are looked for, see EventScan.c. Written by dzo from the
-// mission's cfgeventspawns.xml, cfgeventgroups.xml and db/events.xml.
-class DZOAdminScanSpawn
-{
-	float x;
-	float y;
-	float z;
-	string g;   // a group of the rule whose classes are looked for instead
-}
-
-class DZOAdminScanGroup
-{
-	string name;
-	ref array<string> classes;
-	float radius;
-}
-
-class DZOAdminScanRule
-{
-	string name;     // the event, as in db/events.xml
-	ref array<string> classes;
-	float radius;
-	ref array<ref DZOAdminScanGroup> groups;
-	ref array<ref DZOAdminScanSpawn> spawns;
-}
-
 // $profile:dzo-admin/config.json, written by `dzo instance render` (never in
 // git: it holds the instance token).
 class DZOAdminConfig
@@ -51,14 +25,13 @@ class DZOAdminConfig
 	int vehicles_s = 60;
 	int markers_s = 10;
 	int events_s = 30;
-	int event_scan_s = 90; // one round over all places of event_scan
 	bool allow_spawn = true;
 	ref array<string> allow_classes; // empty = every public class
 	ref array<string> deny_classes;
 	ref array<ref DZOAdminWatchRule> watch;
-	ref array<ref DZOAdminScanRule> event_scan;
 
-	// Match reports whether `type` is selected by the glob list `list`.
+	// Match reports whether `type` is selected by the glob list `list`. A pattern is a class name, in
+	// which one `*` stands for any text: "Wreck_*", "*_DE", "StaticObj_Wreck_*_DE".
 	static bool MatchList(array<string> list, string type)
 	{
 		if (!list)
@@ -68,17 +41,24 @@ class DZOAdminConfig
 			int n = pattern.Length();
 			if (n == 0)
 				continue;
-			if (pattern.Substring(n - 1, 1) == "*")
+			int star = pattern.IndexOf("*");
+			if (star < 0)
 			{
-				string prefix = pattern.Substring(0, n - 1);
-				// Substring throws when the length exceeds the string.
-				if (type.Length() >= prefix.Length() && type.Substring(0, prefix.Length()) == prefix)
+				if (pattern == type)
 					return true;
+				continue;
 			}
-			else if (pattern == type)
-			{
-				return true;
-			}
+			string prefix = pattern.Substring(0, star);
+			string suffix = pattern.Substring(star + 1, n - star - 1);
+			int t = type.Length();
+			// Substring throws when the length exceeds the string.
+			if (t < prefix.Length() + suffix.Length())
+				continue;
+			if (prefix.Length() > 0 && type.Substring(0, prefix.Length()) != prefix)
+				continue;
+			if (suffix.Length() > 0 && type.Substring(t - suffix.Length(), suffix.Length()) != suffix)
+				continue;
+			return true;
 		}
 		return false;
 	}

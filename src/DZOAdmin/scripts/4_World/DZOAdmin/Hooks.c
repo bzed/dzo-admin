@@ -60,6 +60,27 @@ modded class EffectArea
 	}
 }
 
+// Buildings: the objects the Central Economy places for its events (wrecks, crashed helicopters,
+// containers, cisterns) are buildings and houses. Whatever a watch rule selects becomes a marker, so the
+// events show up on the map by the class of their object. The map's own buildings cost one lookup of
+// their type in a cache each.
+modded class BuildingBase
+{
+	override void EEInit()
+	{
+		super.EEInit();
+		if (DZOAdminWatch.s_Rules && GetGame().IsServer())
+			DZOAdminWatch.OnEntityInit(this);
+	}
+
+	override void EEDelete(EntityAI parent)
+	{
+		if (GetGame().IsServer())
+			DZOAdminWatch.OnEntityDelete(this);
+		super.EEDelete(parent);
+	}
+}
+
 // EntityAI is an engine class and cannot be modded, so watch rules and
 // followed markers hook ItemBase (items, fireplaces, ...) and CarScript above.
 // The hooks return immediately while no rule or tracked marker exists.

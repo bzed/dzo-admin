@@ -58,7 +58,6 @@ class DZOAdminService
 			return;
 		}
 		DZOAdminWatch.SetRules(m_Config.watch);
-		DZOAdminEventScan.SetRules(m_Config.event_scan);
 		m_Transport = new DZOAdminTransport(m_Config.endpoint);
 		int tick = Math.Max(250, m_Config.sync_ms);
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Tick, tick, true);
@@ -87,7 +86,6 @@ class DZOAdminService
 			m_Hello = true;
 			m_Transport.m_WantHello = false;
 		}
-		DZOAdminEventScan.Step(m_Config.event_scan_s);
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
 		s.token = m_Config.token;

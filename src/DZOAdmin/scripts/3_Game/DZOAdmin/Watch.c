@@ -47,8 +47,7 @@ class DZOAdminWatch
 			return false;
 		foreach (string c : classes)
 		{
-			int n = c.Length();
-			if (n == 0 || c.Substring(n - 1, 1) == "*")
+			if (c.Length() == 0 || c.IndexOf("*") >= 0)
 				continue;
 			if (GetGame().IsKindOf(type, c))
 				return true;
