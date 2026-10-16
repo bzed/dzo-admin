@@ -166,6 +166,7 @@ class DZOAdminService
 			m_Types = new array<string>;
 			DZOAdminWorld.SpawnableTypes(m_Types);
 			m_Types.Sort(false);
+			DZOAdminKits.Load(m_Types);
 			// A cheap fingerprint (class count : total characters): dzo
 			// re-reads the list only when it changes.
 			int chars = 0;

@@ -255,9 +255,14 @@ class DZOAdminWorld
 			ib.SetQuantity(c.quantity);
 		if (c.health > 0 && c.health <= 1)
 			item.SetHealth01("", "", c.health);
-		// The game's own debug spawn: every item class that needs parts to be usable knows them.
+		// The game's own debug spawn: every item class that needs parts to be usable knows them. When
+		// that leaves the item bare, fit the parts found in the configs (DZOAdminKits).
 		if (c.attachments)
+		{
 			item.OnDebugSpawn();
+			if (item.GetInventory().AttachmentCount() == 0)
+				DZOAdminKits.Fit(item, 0);
+		}
 		return "";
 	}
 
