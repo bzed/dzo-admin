@@ -126,38 +126,20 @@ class DZOAdminWorld
 		}
 	}
 
-	// UnsafeType reports whether a class (in lower case) is known to be unfinished or broken, to
-	// crash the server when spawned (the list Community Online Tools ships), or a map object or
-	// building piece, which is not an item. The lists are the caller's, built once.
-	protected static bool UnsafeType(string lower, TStringArray unfinished, TStringArray contains, TStringArray starts)
-	{
-		if (unfinished.Find(lower) > -1)
-			return true;
-		foreach (string c : contains)
-		{
-			if (lower.Contains(c))
-				return true;
-		}
-		foreach (string s : starts)
-		{
-			if (lower.IndexOf(s) == 0)
-				return true;
-		}
-		return false;
-	}
-
 	// SpawnableTypes lists the item classes of every loaded mod that are safe to spawn, for dzo's
-	// item picker: public (scope 2), with a model, able to live in an inventory or on the ground,
-	// and not on the list of broken or unfinished ones.
+	// item picker: public (scope 2) classes that can live in an inventory or on the ground, without
+	// the ones that crash the server or raise script errors when they are created. Those were
+	// found by creating every class on a server, see scripts/test-spawnable.sh (game 1.30). A mod's
+	// own broken classes are not known here: run that script for a server with mods.
 	static void SpawnableTypes(array<string> list)
 	{
 		TStringArray roots = {"CfgVehicles", "CfgWeapons", "CfgMagazines"};
-		TStringArray unfinished = {"quickiebow", "recurvebow", "gp25base", "gp25", "gp25_standalone", "m203base", "m203",
-			"m203_standalone", "red9", "pvcbow", "m249", "undersluggrenadem4", "groza", "trumpet", "lawbase", "law", "rpg7base", "rpg7",
-			"dartgun", "shockpistol", "shockpistol_black", "fnx45_arrow", "makarovpb", "mp133shotgun_pistolgrip", "largetentbackpack",
-			"leatherbelt_natural", "leatherbelt_beige", "leatherbelt_brown", "leatherbelt_black", "leatherknifesheath"};
-		TStringArray contains = {"placing", "debug"};
-		TStringArray starts = {"bldr_", "land_", "staticobj_"};
+		TStringArray unsafe = {
+			// crash the server
+			"PVCBow", "QuickieBow", "RecurveBow", "GP25", "GP25_Standalone", "M203", "M203_Standalone", "DartGun",
+			// script errors
+			"Ammo_40mm_Smoke_Black", "Fence", "Groza", "LargeTentBackPack", "LAW", "M249", "RPG7", "Shockpistol",
+			"Shockpistol_Black", "TerritoryFlag", "Trumpet", "Watchtower"};
 		foreach (string root : roots)
 		{
 			int n = GetGame().ConfigGetChildrenCount(root);
@@ -167,15 +149,10 @@ class DZOAdminWorld
 				GetGame().ConfigGetChildName(root, i, name);
 				if (GetGame().ConfigGetInt(root + " " + name + " scope") != 2)
 					continue;
-				string model;
-				if (!GetGame().ConfigGetText(root + " " + name + " model", model) || model == "" || model == "bmp")
-					continue;
-				string lower = name;
-				lower.ToLower();
-				if (UnsafeType(lower, unfinished, contains, starts))
-					continue;
 				// Only things that can live in an inventory or on the ground.
 				if (root == "CfgVehicles" && !GetGame().IsKindOf(name, "Inventory_Base") && !GetGame().IsKindOf(name, "Clothing_Base"))
+					continue;
+				if (unsafe.Find(name) > -1)
 					continue;
 				list.Insert(name);
 			}
@@ -278,6 +255,9 @@ class DZOAdminWorld
 			ib.SetQuantity(c.quantity);
 		if (c.health > 0 && c.health <= 1)
 			item.SetHealth01("", "", c.health);
+		// The game's own debug spawn: every item class that needs parts to be usable knows them.
+		if (c.attachments)
+			item.OnDebugSpawn();
 		return "";
 	}
 

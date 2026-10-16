@@ -117,6 +117,7 @@ class DZOAdminCommand
 	string style;      // message: chat, important, notification
 	string type;       // spawn_item: class name
 	float quantity;
+	bool attachments;
 	float health;      // 0..1, 0 = default
 	string target;     // spawn_item: inventory, hands, ground
 	float x;
