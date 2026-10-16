@@ -110,12 +110,12 @@ class DZOAdminResult
 class DZOAdminCommand
 {
 	string id;
-	string kind;       // message, teleport, spawn_item, vehicle_repair, vehicle_flip, vehicle_delete
-	string steam_id;   // target player, "" = everyone (message)
+	string kind;       // message, teleport, spawn_item, spawn_vehicle, vehicle_repair, vehicle_flip, vehicle_delete
+	string steam_id;   // target player, "" = everyone (message), the ground at x/z (spawn_item)
 	string to_steam_id; // teleport to this player
 	string text;
 	string style;      // message: chat, important, notification
-	string type;       // spawn_item: class name
+	string type;       // spawn_item, spawn_vehicle: class name
 	float quantity;
 	bool attachments;
 	float health;      // 0..1, 0 = default
@@ -148,6 +148,7 @@ class DZOAdminSync
 	ref array<ref DZOAdminLayer> layers;
 	ref array<ref DZOAdminEvent> events;
 	ref DZOAdminTypes types;
+	ref DZOAdminTypes vehicle_types;
 	ref array<ref DZOAdminResult> results;
 }
 

@@ -1,6 +1,65 @@
 // SPDX-FileCopyrightText: 2026 Bernd Zeimetz <bernd@bzed.de>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+// A class list sent to dzo in pieces: the list is built once, on first use, and chunks keep the requests
+// small. Items are the classes dzo can give to a player, vehicles the ones it can spawn on the map.
+class DZOAdminTypeFeed
+{
+	protected bool m_Vehicles;
+	protected ref array<string> m_List;
+	protected string m_Hash;
+	protected int m_Sent;
+
+	void DZOAdminTypeFeed(bool vehicles)
+	{
+		m_Vehicles = vehicles;
+	}
+
+	// Start again from the first chunk (dzo lost the list).
+	void Restart()
+	{
+		m_Sent = 0;
+	}
+
+	// Next returns the next chunk of the list, or null when all of it was sent.
+	DZOAdminTypes Next()
+	{
+		if (!m_List)
+		{
+			m_List = new array<string>;
+			if (m_Vehicles)
+			{
+				DZOAdminWorld.SpawnableVehicles(m_List);
+				m_List.Sort(false);
+			}
+			else
+			{
+				DZOAdminWorld.SpawnableTypes(m_List);
+				m_List.Sort(false);
+				DZOAdminKits.Load(m_List);
+			}
+			// A cheap fingerprint (class count : total characters): dzo
+			// re-reads the list only when it changes.
+			int chars = 0;
+			foreach (string t : m_List)
+				chars += t.Length();
+			m_Hash = m_List.Count().ToString() + ":" + chars.ToString();
+		}
+		if (m_Sent >= m_List.Count())
+			return null;
+		DZOAdminTypes ty = new DZOAdminTypes();
+		ty.hash = m_Hash;
+		ty.offset = m_Sent;
+		ty.total = m_List.Count();
+		ty.names = new array<string>;
+		int end = Math.Min(m_List.Count(), m_Sent + 400);
+		for (int i = m_Sent; i < end; i++)
+			ty.names.Insert(m_List.Get(i));
+		m_Sent = end;
+		return ty;
+	}
+}
+
 // The mod's main loop. Every sync_ms it posts whatever state is due, plus the
 // results of finished commands, to dzo and executes the commands in the reply.
 // Without a config (no dzo/admin/config.json) it only logs and stays idle, so
@@ -17,9 +76,8 @@ class DZOAdminService
 	// again instead of being executed twice.
 	protected ref map<string, ref DZOAdminResult> m_Done = new map<string, ref DZOAdminResult>;
 	protected ref array<string> m_DoneOrder = new array<string>;
-	protected ref array<string> m_Types;
-	protected string m_TypesHash;
-	protected int m_TypesSent;
+	protected ref DZOAdminTypeFeed m_Items;
+	protected ref DZOAdminTypeFeed m_Vehicles;
 	protected int m_Seq;
 	protected bool m_Hello = true;
 	protected float m_LastPlayers = -1000;
@@ -57,6 +115,8 @@ class DZOAdminService
 			m_Config = null;
 			return;
 		}
+		m_Items = new DZOAdminTypeFeed(false);
+		m_Vehicles = new DZOAdminTypeFeed(true);
 		DZOAdminWatch.SetRules(m_Config.watch);
 		m_Transport = new DZOAdminTransport(m_Config.endpoint);
 		int tick = Math.Max(250, m_Config.sync_ms);
@@ -84,14 +144,16 @@ class DZOAdminService
 		if (m_Transport.m_ResendTypes)
 		{
 			m_Transport.m_ResendTypes = false;
-			m_TypesSent = 0;
+			m_Items.Restart();
+			m_Vehicles.Restart();
 		}
 		if (m_Transport.m_WantHello)
 		{
 			m_Hello = true;
 			m_Transport.m_WantHello = false;
 			// dzo lost its state (a restart, a lost request): send the class list again from the start.
-			m_TypesSent = 0;
+			m_Items.Restart();
+			m_Vehicles.Restart();
 		}
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
@@ -141,7 +203,8 @@ class DZOAdminService
 			DZOAdminWorld.CollectEvents(s.events);
 			m_LastEvents = now;
 		}
-		s.types = NextTypes();
+		s.types = m_Items.Next();
+		s.vehicle_types = m_Vehicles.Next();
 		if (m_Results.Count() > 0)
 		{
 			s.results = new array<ref DZOAdminResult>;
@@ -155,37 +218,6 @@ class DZOAdminService
 		// interval, and dzo asks again for results it never saw (it
 		// re-sends the command, which m_Done answers without re-executing).
 		m_Results.Clear();
-	}
-
-	// NextTypes returns the next chunk of the spawnable class list (the list
-	// is built once, on first use, and sent in pieces to keep requests small).
-	protected DZOAdminTypes NextTypes()
-	{
-		if (!m_Types)
-		{
-			m_Types = new array<string>;
-			DZOAdminWorld.SpawnableTypes(m_Types);
-			m_Types.Sort(false);
-			DZOAdminKits.Load(m_Types);
-			// A cheap fingerprint (class count : total characters): dzo
-			// re-reads the list only when it changes.
-			int chars = 0;
-			foreach (string t : m_Types)
-				chars += t.Length();
-			m_TypesHash = m_Types.Count().ToString() + ":" + chars.ToString();
-		}
-		if (m_TypesSent >= m_Types.Count())
-			return null;
-		DZOAdminTypes ty = new DZOAdminTypes();
-		ty.hash = m_TypesHash;
-		ty.offset = m_TypesSent;
-		ty.total = m_Types.Count();
-		ty.names = new array<string>;
-		int end = Math.Min(m_Types.Count(), m_TypesSent + 400);
-		for (int i = m_TypesSent; i < end; i++)
-			ty.names.Insert(m_Types.Get(i));
-		m_TypesSent = end;
-		return ty;
 	}
 
 	protected void Execute(DZOAdminCommand c)
@@ -203,6 +235,8 @@ class DZOAdminService
 			err = DZOAdminWorld.Teleport(c);
 		else if (c.kind == "spawn_item")
 			err = DZOAdminWorld.SpawnItem(c, m_Config);
+		else if (c.kind == "spawn_vehicle")
+			err = DZOAdminWorld.SpawnVehicle(c, m_Config);
 		else if (c.kind == "vehicle_repair")
 			err = DZOAdminWorld.VehicleRepair(c);
 		else if (c.kind == "vehicle_flip")

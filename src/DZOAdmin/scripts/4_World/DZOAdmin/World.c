@@ -159,6 +159,20 @@ class DZOAdminWorld
 		}
 	}
 
+	// SpawnableVehicles lists the vehicle classes (public cars, boats and helicopters, of every loaded
+	// mod) for the vehicle picker of the map.
+	static void SpawnableVehicles(array<string> list)
+	{
+		int n = GetGame().ConfigGetChildrenCount("CfgVehicles");
+		for (int i = 0; i < n; i++)
+		{
+			string name;
+			GetGame().ConfigGetChildName("CfgVehicles", i, name);
+			if (GetGame().ConfigGetInt("CfgVehicles " + name + " scope") == 2 && GetGame().IsKindOf(name, "Transport"))
+				list.Insert(name);
+		}
+	}
+
 	// ---- actions; each returns "" on success or an error text ----
 
 	static string Message(DZOAdminCommand c)
@@ -225,44 +239,108 @@ class DZOAdminWorld
 		return "";
 	}
 
+	// The most stacks one spawn makes: a quantity of 20 bricks is as many stacks as the stack size needs.
+	static const int MAX_STACKS = 50;
+
+	// The point on the ground at x/z.
+	static vector GroundAt(float x, float z)
+	{
+		return Vector(x, GetGame().SurfaceY(x, z), z);
+	}
+
+	// Spawns an item for a player (target inventory, hands or ground), or on the ground at x/z when no
+	// player is named. A quantity above what a stack holds makes more stacks, up to MAX_STACKS.
 	static string SpawnItem(DZOAdminCommand c, DZOAdminConfig cfg)
 	{
 		if (!cfg.SpawnAllowed(c.type))
 			return "class not allowed";
 		if (!GetGame().ConfigIsExisting("CfgVehicles " + c.type) && !GetGame().ConfigIsExisting("CfgWeapons " + c.type) && !GetGame().ConfigIsExisting("CfgMagazines " + c.type))
 			return "unknown class";
-		PlayerBase p = FindPlayer(c.steam_id);
-		if (!p)
-			return "player not online";
-		if (!p.IsAlive())
-			return "player is dead";
-		EntityAI item = null;
-		if (c.target == "hands")
+		PlayerBase p = null;
+		vector pos;
+		string target = c.target;
+		if (c.steam_id != "")
 		{
-			item = p.GetHumanInventory().CreateInHands(c.type);
+			p = FindPlayer(c.steam_id);
+			if (!p)
+				return "player not online";
+			if (!p.IsAlive())
+				return "player is dead";
+			pos = p.GetPosition();
 		}
-		else if (c.target != "ground")
+		else
 		{
-			item = p.GetInventory().CreateInInventory(c.type);
+			pos = GroundAt(c.x, c.z);
+			target = "ground";
 		}
-		// Full inventory or "ground": drop it at the player's feet.
-		if (!item)
-			item = EntityAI.Cast(GetGame().CreateObjectEx(c.type, p.GetPosition(), ECE_PLACE_ON_SURFACE));
-		if (!item)
-			return "could not create the item";
-		ItemBase ib = ItemBase.Cast(item);
-		if (ib && c.quantity > 0)
-			ib.SetQuantity(c.quantity);
-		if (c.health > 0 && c.health <= 1)
-			item.SetHealth01("", "", c.health);
-		// The game's own debug spawn: every item class that needs parts to be usable knows them. When
-		// that leaves the item bare, fit the parts found in the configs (DZOAdminKits).
-		if (c.attachments)
+		float left = c.quantity;
+		int made = 0;
+		while (true)
 		{
-			item.OnDebugSpawn();
-			if (item.GetInventory().AttachmentCount() == 0)
-				DZOAdminKits.Fit(item, 0);
+			EntityAI item = null;
+			if (p && target == "hands" && made == 0)
+			{
+				item = p.GetHumanInventory().CreateInHands(c.type);
+			}
+			else if (p && target != "ground")
+			{
+				item = p.GetInventory().CreateInInventory(c.type);
+			}
+			// Full inventory or "ground": drop it at the player's feet.
+			if (!item)
+				item = EntityAI.Cast(GetGame().CreateObjectEx(c.type, pos, ECE_PLACE_ON_SURFACE));
+			if (!item)
+			{
+				if (made == 0)
+					return "could not create the item";
+				return "made " + made.ToString() + " stacks, then the world refused more";
+			}
+			made++;
+			ItemBase ib = ItemBase.Cast(item);
+			float max = 0;
+			if (ib)
+				max = ib.GetQuantityMax();
+			if (ib && left > 0)
+			{
+				if (made == 1 && max > 0 && Math.Ceil(left / max) > MAX_STACKS)
+				{
+					GetGame().ObjectDelete(item);
+					return "that quantity needs more than " + MAX_STACKS.ToString() + " stacks of " + max.ToString();
+				}
+				float q = left;
+				if (max > 0 && q > max)
+					q = max;
+				ib.SetQuantity(q);
+				left = left - q;
+			}
+			if (c.health > 0 && c.health <= 1)
+				item.SetHealth01("", "", c.health);
+			// The game's own debug spawn: every item class that needs parts to be usable knows them. When
+			// that leaves the item bare, fit the parts found in the configs (DZOAdminKits).
+			if (c.attachments)
+			{
+				item.OnDebugSpawn();
+				if (item.GetInventory().AttachmentCount() == 0)
+					DZOAdminKits.Fit(item, 0);
+			}
+			if (left <= 0 || max <= 0)
+				return "";
 		}
+		return "";
+	}
+
+	// Spawns a vehicle on the ground at x/z, the way the game's debug spawn makes it: with its parts, fuel
+	// and the tools to repair it.
+	static string SpawnVehicle(DZOAdminCommand c, DZOAdminConfig cfg)
+	{
+		if (!cfg.SpawnAllowed(c.type))
+			return "class not allowed";
+		if (!GetGame().ConfigIsExisting("CfgVehicles " + c.type) || !GetGame().IsKindOf(c.type, "Transport"))
+			return "not a vehicle class";
+		EntityAI v = EntityAI.Cast(GetGame().CreateObjectEx(c.type, GroundAt(c.x, c.z), ECE_PLACE_ON_SURFACE | ECE_CREATEPHYSICS | ECE_UPDATEPATHGRAPH));
+		if (!v)
+			return "could not create the vehicle";
+		v.OnDebugSpawn();
 		return "";
 	}
 
@@ -291,9 +369,14 @@ class DZOAdminWorld
 		for (int i = 0; src && dst && i < src.AttachmentCount(); i++)
 		{
 			EntityAI part = src.GetAttachmentFromIndex(i);
-			if (!part || part.GetInventory().GetSlotIdCount() == 0)
+			if (!part)
 				continue;
-			int slot = part.GetInventory().GetSlotId(0);
+			// The slot the donor fits the part into, not the first slot the part could go into: a
+			// headlight fits two slots and a car has one of each.
+			InventoryLocation loc = new InventoryLocation();
+			if (!part.GetInventory().GetCurrentInventoryLocation(loc) || loc.GetType() != InventoryLocationType.ATTACHMENT)
+				continue;
+			int slot = loc.GetSlot();
 			if (!dst.FindAttachment(slot))
 				dst.CreateAttachmentEx(part.GetType(), slot);
 		}
