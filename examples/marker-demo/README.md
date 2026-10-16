@@ -14,4 +14,4 @@ dzo-admin is loaded. Without it the mod still works, it just draws nothing.
 Do not list `DZOAdmin` in `requiredAddons`.
 
 If your mod cannot use `#ifdef` (it loads before dzo-admin), write
-`$profile:dzo-admin/markers/<layer>.json` instead; dzo reads those files.
+`$profile:dzo/admin/markers/<layer>.json` instead; dzo reads those files.

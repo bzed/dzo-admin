@@ -3,7 +3,7 @@
 
 // The mod's main loop. Every sync_ms it posts whatever state is due, plus the
 // results of finished commands, to dzo and executes the commands in the reply.
-// Without a config (no dzo-admin/config.json) it only logs and stays idle, so
+// Without a config (no dzo/admin/config.json) it only logs and stays idle, so
 // the mod can be loaded before dzo has rendered the instance.
 class DZOAdminService
 {

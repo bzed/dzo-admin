@@ -15,7 +15,7 @@ Layout: `src/DZOAdmin/` is the PBO root (`$PBOPREFIX$` = `DZOAdmin`).
 | Script module | File | Purpose |
 |---|---|---|
 | `3_Game` | `Proto.c` | wire types (JSON) |
-| | `Config.c` | `$profile:dzo-admin/config.json` |
+| | `Config.c` | `$profile:dzo/admin/config.json` |
 | | `Transport.c` | outbound `RestApi` POST with backoff |
 | | `Map.c` | `DZOAdmin_Map`, the marker API for other mods |
 | `4_World` | `Hooks.c` | vehicle/effect-area registries, class watch rules |
@@ -47,7 +47,7 @@ answered from memory, not executed again.
 
 See `examples/marker-demo`. Three ways: class watch rules in the config (no
 code), the `DZOAdmin_Map` API behind `#ifdef DZO_ADMIN`, or JSON files in
-`$profile:dzo-admin/markers/` (read by dzo directly).
+`$profile:dzo/admin/markers/` (read by dzo directly).
 
 ## Status
 

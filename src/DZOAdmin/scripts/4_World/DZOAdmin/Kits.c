@@ -3,11 +3,11 @@
 
 // What an item needs to be usable, worked out from the item configs: for every class of the
 // spawn list, the part that fits each of its attachment slots. The result is cached in
-// $profile:dzo-admin/kits.json together with a fingerprint of the class list, so a restart only
+// $profile:dzo/admin/kits.json together with a fingerprint of the class list, so a restart only
 // compares the fingerprint and scans again when the set of classes changed (a mod was added,
 // updated or removed).
 
-const string DZOADMIN_KITS_PATH = "$profile:dzo-admin/kits.json";
+const string DZOADMIN_KITS_PATH = "$profile:dzo/admin/kits.json";
 
 class DZOAdminKitCache
 {

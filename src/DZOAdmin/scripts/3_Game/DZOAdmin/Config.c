@@ -13,7 +13,7 @@ class DZOAdminWatchRule
 	int max;
 }
 
-// $profile:dzo-admin/config.json, written by `dzo instance render` (never in
+// $profile:dzo/admin/config.json, written by `dzo instance render` (never in
 // git: it holds the instance token).
 class DZOAdminConfig
 {
