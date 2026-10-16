@@ -136,6 +136,8 @@ class DZOAdminSync
 	string world;
 	int seq;
 	bool hello;
+	// The in-game time of day in minutes since midnight; sent with every request, listed in `has` as "clock".
+	int clock;
 	// The JSON writer turns a null array into [], so the parts that are
 	// really included are listed here: players, vehicles, markers, events.
 	ref array<string> has;

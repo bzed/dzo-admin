@@ -94,6 +94,10 @@ class DZOAdminService
 		s.seq = m_Seq;
 		s.hello = m_Hello;
 		s.has = new array<string>;
+		int year, month, day, hour, minute;
+		GetGame().GetWorld().GetDate(year, month, day, hour, minute);
+		s.clock = hour * 60 + minute;
+		s.has.Insert("clock");
 		if (m_Hello)
 		{
 			string world;
