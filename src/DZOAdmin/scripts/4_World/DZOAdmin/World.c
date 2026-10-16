@@ -126,11 +126,38 @@ class DZOAdminWorld
 		}
 	}
 
-	// SpawnableTypes lists the public item classes of every loaded mod, for
-	// dzo's item picker.
+	// UnsafeType reports whether a class (in lower case) is known to be unfinished or broken, to
+	// crash the server when spawned (the list Community Online Tools ships), or a map object or
+	// building piece, which is not an item. The lists are the caller's, built once.
+	protected static bool UnsafeType(string lower, TStringArray unfinished, TStringArray contains, TStringArray starts)
+	{
+		if (unfinished.Find(lower) > -1)
+			return true;
+		foreach (string c : contains)
+		{
+			if (lower.Contains(c))
+				return true;
+		}
+		foreach (string s : starts)
+		{
+			if (lower.IndexOf(s) == 0)
+				return true;
+		}
+		return false;
+	}
+
+	// SpawnableTypes lists the item classes of every loaded mod that are safe to spawn, for dzo's
+	// item picker: public (scope 2), with a model, able to live in an inventory or on the ground,
+	// and not on the list of broken or unfinished ones.
 	static void SpawnableTypes(array<string> list)
 	{
 		TStringArray roots = {"CfgVehicles", "CfgWeapons", "CfgMagazines"};
+		TStringArray unfinished = {"quickiebow", "recurvebow", "gp25base", "gp25", "gp25_standalone", "m203base", "m203",
+			"m203_standalone", "red9", "pvcbow", "m249", "undersluggrenadem4", "groza", "trumpet", "lawbase", "law", "rpg7base", "rpg7",
+			"dartgun", "shockpistol", "shockpistol_black", "fnx45_arrow", "makarovpb", "mp133shotgun_pistolgrip", "largetentbackpack",
+			"leatherbelt_natural", "leatherbelt_beige", "leatherbelt_brown", "leatherbelt_black", "leatherknifesheath"};
+		TStringArray contains = {"placing", "debug"};
+		TStringArray starts = {"bldr_", "land_", "staticobj_"};
 		foreach (string root : roots)
 		{
 			int n = GetGame().ConfigGetChildrenCount(root);
@@ -139,6 +166,13 @@ class DZOAdminWorld
 				string name;
 				GetGame().ConfigGetChildName(root, i, name);
 				if (GetGame().ConfigGetInt(root + " " + name + " scope") != 2)
+					continue;
+				string model;
+				if (!GetGame().ConfigGetText(root + " " + name + " model", model) || model == "" || model == "bmp")
+					continue;
+				string lower = name;
+				lower.ToLower();
+				if (UnsafeType(lower, unfinished, contains, starts))
 					continue;
 				// Only things that can live in an inventory or on the ground.
 				if (root == "CfgVehicles" && !GetGame().IsKindOf(name, "Inventory_Base") && !GetGame().IsKindOf(name, "Clothing_Base"))

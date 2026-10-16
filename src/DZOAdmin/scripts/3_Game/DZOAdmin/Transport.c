@@ -44,6 +44,7 @@ class DZOAdminTransport
 	bool m_LastOk;
 	// Set by a reply that asks for the hello again; the service sends it and clears the flag.
 	bool m_WantHello;
+	bool m_ResendTypes;
 
 	void DZOAdminTransport(string endpoint)
 	{
@@ -105,6 +106,8 @@ class DZOAdminTransport
 		m_LastOk = true;
 		if (reply.hello)
 			m_WantHello = true;
+		if (reply.resend_types)
+			m_ResendTypes = true;
 		if (reply.commands)
 		{
 			foreach (DZOAdminCommand c : reply.commands)

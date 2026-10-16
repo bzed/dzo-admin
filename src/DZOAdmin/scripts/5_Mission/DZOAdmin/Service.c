@@ -81,10 +81,17 @@ class DZOAdminService
 			m_Transport.m_Inbox.RemoveOrdered(0);
 			Execute(c);
 		}
+		if (m_Transport.m_ResendTypes)
+		{
+			m_Transport.m_ResendTypes = false;
+			m_TypesSent = 0;
+		}
 		if (m_Transport.m_WantHello)
 		{
 			m_Hello = true;
 			m_Transport.m_WantHello = false;
+			// dzo lost its state (a restart, a lost request): send the class list again from the start.
+			m_TypesSent = 0;
 		}
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();

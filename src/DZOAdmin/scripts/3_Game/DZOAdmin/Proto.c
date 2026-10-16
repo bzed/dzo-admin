@@ -158,4 +158,6 @@ class DZOAdminReply
 	ref array<ref DZOAdminCommand> commands;
 	// dzo asks for the hello (with the world name) again, e.g. after dzo serve restarted.
 	bool hello;
+	// dzo lost a part of the class list and wants it again from the start.
+	bool resend_types;
 }
