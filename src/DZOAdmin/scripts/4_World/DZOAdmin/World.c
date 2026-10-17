@@ -99,12 +99,51 @@ class DZOAdminWorld
 				if (crew && crew.GetIdentity())
 					v.occupants.Insert(crew.GetIdentity().GetPlainId());
 			}
+#ifdef EXPANSIONMODVEHICLE
+			ExpansionVehicle ev = c.GetExpansionVehicle();
+			if (ev)
+				v.owner = ev.GetOwnerName();
+#endif
 			list.Insert(v);
 		}
+#ifdef EXPANSIONMODVEHICLE
+		CollectCovers(list);
+#endif
 #ifndef DAYZ_1_29
 		DZOAdminBikes.Collect(list);
 #endif
 	}
+
+#ifdef EXPANSIONMODVEHICLE
+	// DayZ Expansion stores a covered vehicle in a file and leaves an ExpansionVehicleCover in the
+	// world, which is no CarScript. The cover is reported as the vehicle it holds (its class is the
+	// first entry of the cover's netsync data), without health, fuel or crew.
+	static void CollectCovers(array<ref DZOAdminVehicle> list)
+	{
+		foreach (ExpansionEntityStoragePlaceholder p : ExpansionEntityStoragePlaceholder.s_Expansion_AllPlaceholders)
+		{
+			ExpansionVehicleCover cover = ExpansionVehicleCover.Cast(p);
+			if (!cover || !cover.m_Expansion_NetsyncData)
+				continue;
+			string type;
+			if (!cover.m_Expansion_NetsyncData.Get(0, type) || type == "")
+				continue;
+			DZOAdminVehicle v = new DZOAdminVehicle();
+			v.id = VehicleId(cover);
+			v.kind = "car";
+			v.type = type;
+			vector pos = cover.GetPosition();
+			v.x = pos[0];
+			v.y = pos[1];
+			v.z = pos[2];
+			v.yaw = cover.GetOrientation()[0];
+			v.occupants = new array<string>;
+			v.owner = cover.Expansion_GetOwnerName();
+			v.covered = true;
+			list.Insert(v);
+		}
+	}
+#endif
 
 	static void CollectEvents(array<ref DZOAdminEvent> list)
 	{
@@ -384,7 +423,47 @@ class DZOAdminWorld
 			if (!dst.FindAttachment(slot))
 				dst.CreateAttachmentEx(part.GetType(), slot);
 		}
+		FillWheelSlots(e, donor);
 		GetGame().ObjectDelete(donor);
+	}
+
+	// Every wheel slot the vehicle's config lists (the four wheels and the spare, where it has them)
+	// gets a wheel: the debug spawn may leave one out. The wheel class comes from the wheels the
+	// vehicle or the donor carries; each is tried in the empty slot until one fits.
+	protected static void FillWheelSlots(EntityAI e, EntityAI donor)
+	{
+		TStringArray types = new TStringArray;
+		GameInventory src = donor.GetInventory();
+		GameInventory dst = e.GetInventory();
+		for (int i = 0; i < dst.AttachmentCount(); i++)
+		{
+			EntityAI w = dst.GetAttachmentFromIndex(i);
+			if (w && w.IsKindOf("CarWheel") && types.Find(w.GetType()) < 0)
+				types.Insert(w.GetType());
+		}
+		for (int j = 0; j < src.AttachmentCount(); j++)
+		{
+			EntityAI dw = src.GetAttachmentFromIndex(j);
+			if (dw && dw.IsKindOf("CarWheel") && types.Find(dw.GetType()) < 0)
+				types.Insert(dw.GetType());
+		}
+		if (types.Count() == 0)
+			return;
+		TStringArray names = new TStringArray;
+		GetGame().ConfigGetTextArray("CfgVehicles " + e.GetType() + " attachments", names);
+		foreach (string name : names)
+		{
+			if (!name.Contains("Wheel"))
+				continue;
+			int slot = InventorySlots.GetSlotIdFromString(name);
+			if (slot == InventorySlots.INVALID || dst.FindAttachment(slot))
+				continue;
+			foreach (string type : types)
+			{
+				if (dst.CreateAttachmentEx(type, slot))
+					break;
+			}
+		}
 	}
 
 	// Stands a vehicle upright on its wheels where it is, keeping its heading.

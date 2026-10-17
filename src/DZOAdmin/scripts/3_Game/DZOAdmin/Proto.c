@@ -37,6 +37,8 @@ class DZOAdminVehicle
 	bool ruined;
 	bool engine;
 	ref array<string> occupants;
+	string owner;      // DayZ Expansion: the name on the key chain, when it is loaded
+	bool covered;      // DayZ Expansion: stored under a cover, only its class and place are known
 }
 
 class DZOAdminKV
