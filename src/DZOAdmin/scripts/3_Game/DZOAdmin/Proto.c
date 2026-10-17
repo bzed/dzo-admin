@@ -118,7 +118,7 @@ class DZOAdminCommand
 	string text;
 	string style;      // message: chat (yellow), action (the same), blue, important (red), friendly (green), notification
 	string type;       // spawn_item, spawn_vehicle: class name
-	float quantity;
+	float quantity;    // spawn_item: 0 = as the game makes it, below 0 = max (a full stack)
 	bool attachments;
 	float health;      // 0..1, 0 = default
 	string target;     // spawn_item: inventory, hands, ground

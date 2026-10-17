@@ -316,6 +316,10 @@ class DZOAdminWorld
 			pos = GroundAt(c.x, c.z);
 			target = "ground";
 		}
+		// quantity: -1 = leave what the game makes, -2 = one full stack (the class's own maximum), 0 or more is
+		// passed to SetQuantity (0 makes the item empty; a class that cannot exist empty is deleted by the game).
+		bool fill = c.quantity == -2;
+		bool keep = c.quantity < 0 && !fill;
 		float left = c.quantity;
 		int made = 0;
 		while (true)
@@ -343,7 +347,13 @@ class DZOAdminWorld
 			float max = 0;
 			if (ib)
 				max = ib.GetQuantityMax();
-			if (ib && left > 0)
+			if (ib && fill)
+			{
+				if (max > 0)
+					ib.SetQuantity(max);
+				left = 0;
+			}
+			else if (ib && !keep)
 			{
 				if (made == 1 && max > 0 && Math.Ceil(left / max) > MAX_STACKS)
 				{
