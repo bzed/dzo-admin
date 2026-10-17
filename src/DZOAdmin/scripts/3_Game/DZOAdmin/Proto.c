@@ -114,7 +114,7 @@ class DZOAdminCommand
 	string steam_id;   // target player, "" = everyone (message), the ground at x/z (spawn_item)
 	string to_steam_id; // teleport to this player
 	string text;
-	string style;      // message: chat, important, friendly, action, notification
+	string style;      // message: chat (yellow), action (the same), blue, important (red), friendly (green), notification
 	string type;       // spawn_item, spawn_vehicle: class name
 	float quantity;
 	bool attachments;

@@ -177,13 +177,13 @@ class DZOAdminWorld
 
 	static string Message(DZOAdminCommand c)
 	{
-		string style = "colorStatusChannel";
-		if (c.style == "important")
+		string style = "colorAction";
+		if (c.style == "blue")
+			style = "colorStatusChannel";
+		else if (c.style == "important")
 			style = "colorImportant";
 		else if (c.style == "friendly")
 			style = "colorFriendly";
-		else if (c.style == "action")
-			style = "colorAction";
 		array<Man> men = new array<Man>;
 		if (c.steam_id == "")
 		{
