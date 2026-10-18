@@ -233,6 +233,12 @@ class DZOAdminService
 			err = DZOAdminWorld.Message(c);
 		else if (c.kind == "teleport")
 			err = DZOAdminWorld.Teleport(c);
+		else if (c.kind == "player_kill")
+			err = DZOAdminWorld.PlayerKill(c);
+		else if (c.kind == "player_heal")
+			err = DZOAdminWorld.PlayerHeal(c);
+		else if (c.kind == "player_fixgear")
+			err = DZOAdminWorld.PlayerFixGear(c);
 		else if (c.kind == "spawn_item")
 			err = DZOAdminWorld.SpawnItem(c, m_Config);
 		else if (c.kind == "spawn_vehicle")

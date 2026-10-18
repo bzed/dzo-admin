@@ -282,6 +282,44 @@ class DZOAdminWorld
 		return "";
 	}
 
+	static string PlayerKill(DZOAdminCommand c)
+	{
+		PlayerBase p = FindPlayer(c.steam_id);
+		if (!p)
+			return "player not online";
+		if (!p.IsAlive())
+			return "player is already dead";
+		p.SetHealth("", "", -1); // what the game's own kill command does
+		return "";
+	}
+
+	static string PlayerHeal(DZOAdminCommand c)
+	{
+		PlayerBase p = FindPlayer(c.steam_id);
+		if (!p)
+			return "player not online";
+		if (!p.IsAlive())
+			return "player is dead";
+		p.DZOAdminHeal();
+		return "";
+	}
+
+	// Repairs everything the player carries and wears, the parts of an item as well.
+	static string PlayerFixGear(DZOAdminCommand c)
+	{
+		PlayerBase p = FindPlayer(c.steam_id);
+		if (!p)
+			return "player not online";
+		if (!p.IsAlive())
+			return "player is dead";
+		p.FixAllInventoryItems(); // health, wetness, temperature and frost of every item
+		array<EntityAI> items = new array<EntityAI>;
+		p.GetInventory().EnumerateInventory(InventoryTraversalType.INORDER, items);
+		foreach (EntityAI item : items)
+			RepairEntity(item); // and the damage zones
+		return "";
+	}
+
 	// The most stacks one spawn makes: a quantity of 20 bricks is as many stacks as the stack size needs.
 	static const int MAX_STACKS = 50;
 

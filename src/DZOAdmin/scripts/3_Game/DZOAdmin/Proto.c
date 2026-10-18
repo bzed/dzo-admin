@@ -112,7 +112,7 @@ class DZOAdminResult
 class DZOAdminCommand
 {
 	string id;
-	string kind;       // message, teleport, spawn_item, spawn_vehicle, vehicle_repair, vehicle_flip, vehicle_delete
+	string kind;       // message, teleport, player_kill, player_heal, player_fixgear, spawn_item, spawn_vehicle, vehicle_repair, vehicle_flip, vehicle_delete
 	string steam_id;   // target player, "" = everyone (message), the ground at x/z (spawn_item)
 	string to_steam_id; // teleport to this player
 	string text;
