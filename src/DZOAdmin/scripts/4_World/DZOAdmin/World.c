@@ -242,7 +242,7 @@ class DZOAdminWorld
 			if (!p || !p.GetIdentity())
 				continue;
 			if (c.style == "notification")
-				NotificationSystem.SendNotificationToPlayerIdentityExtended(p.GetIdentity(), c.seconds, c.title, c.text, "");
+				NotificationSystem.SendNotificationToPlayerIdentityExtended(p.GetIdentity(), Seconds(c), Title(c), c.text, "");
 			else if (c.style == "expansion")
 			{
 				string failed = SendExpansion(p.GetIdentity(), c);
@@ -258,6 +258,21 @@ class DZOAdminWorld
 		return "";
 	}
 
+	// An older dzo sends no title or duration: the mod then uses these.
+	static string Title(DZOAdminCommand c)
+	{
+		if (c.title == "")
+			return "Server";
+		return c.title;
+	}
+
+	static int Seconds(DZOAdminCommand c)
+	{
+		if (c.seconds <= 0)
+			return 10;
+		return c.seconds;
+	}
+
 	// The Expansion notification of the type c.notify_type, or an error text when Expansion is not loaded.
 	static string SendExpansion(PlayerIdentity id, DZOAdminCommand c)
 	{
@@ -271,7 +286,7 @@ class DZOAdminWorld
 		case "market": type = ExpansionNotificationType.MARKET; break;
 		case "garage": type = ExpansionNotificationType.GARAGE; break;
 		}
-		ExpansionNotification(c.title, c.text, "", ARGB(255, 52, 152, 219), c.seconds, type).Create(id);
+		ExpansionNotification(Title(c), c.text, "", ARGB(255, 52, 152, 219), Seconds(c), type).Create(id);
 		return "";
 #else
 		return "expansion notifications are not available";
