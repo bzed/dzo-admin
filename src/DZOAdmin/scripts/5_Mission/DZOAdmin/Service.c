@@ -202,7 +202,7 @@ class DZOAdminService
 			s.layers = new array<ref DZOAdminLayer>;
 			DZOAdmin_Map.Snapshot(s.markers, s.layers);
 			DZOAdminWatch.WatchMarkers(s.markers);
-			DZOAdminFlags.Collect(s.markers);
+			DZOAdminFlags.Collect(s.markers, s.layers);
 			m_LastMarkers = now;
 		}
 		if (m_Hello || Due(m_LastEvents, m_Config.events_s))

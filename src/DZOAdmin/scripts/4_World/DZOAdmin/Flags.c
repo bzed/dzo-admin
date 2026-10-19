@@ -17,7 +17,23 @@ class DZOAdminFlags
 		m.props.Insert(kv);
 	}
 
-	static void Collect(array<ref DZOAdminMarker> result)
+	// Layer defines a layer once per call, so that /layers lists it for the roles that see its markers.
+	protected static void Layer(array<ref DZOAdminLayer> layers, string name, string icon, string color)
+	{
+		foreach (DZOAdminLayer have : layers)
+		{
+			if (have.name == name)
+				return;
+		}
+		DZOAdminLayer l = new DZOAdminLayer();
+		l.name = name;
+		l.icon = icon;
+		l.color = color;
+		l.visibility = "operator";
+		layers.Insert(l);
+	}
+
+	static void Collect(array<ref DZOAdminMarker> result, array<ref DZOAdminLayer> layers)
 	{
 		foreach (TerritoryFlag f : DZOAdminRegistry.s_Flags)
 		{
@@ -25,6 +41,7 @@ class DZOAdminFlags
 				continue;
 			vector p = f.GetPosition();
 			DZOAdminMarker m = new DZOAdminMarker();
+			Layer(layers, LAYER_FLAGS, "flag", "#c0392b");
 			m.layer = LAYER_FLAGS;
 			m.id = "f" + f.GetID();
 			m.shape = "point";
@@ -48,6 +65,7 @@ class DZOAdminFlags
 				string name = f.GetTerritory().GetTerritoryName();
 				Prop(m, "territory", name);
 				DZOAdminMarker t = new DZOAdminMarker();
+				Layer(layers, LAYER_TERRITORIES, "", "#2f6fb5");
 				t.layer = LAYER_TERRITORIES;
 				t.id = "t" + f.GetID();
 				t.shape = "circle";
