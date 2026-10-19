@@ -40,7 +40,7 @@ State fields are only present when due (players every `players_s`, vehicles
 every `vehicles_s`, markers every `markers_s`, events every `events_s`); the
 first sync after a start has `"hello": true` and carries everything. The reply
 is `{"ok": true, "protocol": 1, "commands": [...]}`. Commands: `message`,
-`teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_delete`; the field list is
+`teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_delete`, `flag_raise`; the field list is
 `DZOAdminCommand` in `Proto.c`. A command id the mod has already executed is
 answered from memory, not executed again.
 

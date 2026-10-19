@@ -258,6 +258,8 @@ class DZOAdminService
 			err = DZOAdminWorld.VehicleFlip(c);
 		else if (c.kind == "vehicle_delete")
 			err = DZOAdminWorld.VehicleDelete(c);
+		else if (c.kind == "flag_raise")
+			err = DZOAdminFlags.Raise(c);
 		else
 			err = "unknown command kind " + c.kind;
 		DZOAdminResult r = new DZOAdminResult();

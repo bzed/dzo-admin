@@ -17,6 +17,32 @@ class DZOAdminFlags
 		m.props.Insert(kv);
 	}
 
+	// The id of a flag is its persistent id, so it stays the same over a restart of the server.
+	static string FlagId(TerritoryFlag f)
+	{
+		int b1;
+		int b2;
+		int b3;
+		int b4;
+		f.GetPersistentID(b1, b2, b3, b4);
+		return "f" + b1.ToString() + "." + b2.ToString() + "." + b3.ToString() + "." + b4.ToString();
+	}
+
+	// Raise puts the flag to the top of its pole and fills its refresher time, as a player does with a new flag.
+	static string Raise(DZOAdminCommand c)
+	{
+		foreach (TerritoryFlag f : DZOAdminRegistry.s_Flags)
+		{
+			if (f && FlagId(f) == c.flag)
+			{
+				f.AddRefresherTime01(1);
+				f.AnimateFlag(1 - f.GetRefresherTime01());
+				return "";
+			}
+		}
+		return "flag not found";
+	}
+
 	// Layer defines a layer once per call, so that /layers lists it for the roles that see its markers.
 	protected static void Layer(array<ref DZOAdminLayer> layers, string name, string icon, string color)
 	{
@@ -43,7 +69,7 @@ class DZOAdminFlags
 			DZOAdminMarker m = new DZOAdminMarker();
 			Layer(layers, LAYER_FLAGS, "flag", "#c0392b");
 			m.layer = LAYER_FLAGS;
-			m.id = "f" + f.GetID();
+			m.id = FlagId(f);
 			m.shape = "point";
 			m.x = p[0];
 			m.y = p[1];
@@ -67,7 +93,7 @@ class DZOAdminFlags
 				DZOAdminMarker t = new DZOAdminMarker();
 				Layer(layers, LAYER_TERRITORIES, "", "#2f6fb5");
 				t.layer = LAYER_TERRITORIES;
-				t.id = "t" + f.GetID();
+				t.id = "t" + FlagId(f);
 				t.shape = "circle";
 				t.x = p[0];
 				t.y = p[1];
