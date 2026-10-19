@@ -1,0 +1,69 @@
+// SPDX-FileCopyrightText: 2026 Bernd Zeimetz <bernd@bzed.de>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+// Territory flags on the map: one marker per flag on the layer "Flags", whose ttl is the refresher
+// time the flag has left, and, with DayZ Expansion, a circle per territory on the layer "Territories".
+// Operators and admins see them (a flag is a base).
+class DZOAdminFlags
+{
+	static const string LAYER_FLAGS = "Flags";
+	static const string LAYER_TERRITORIES = "Territories";
+
+	protected static void Prop(DZOAdminMarker m, string k, string v)
+	{
+		DZOAdminKV kv = new DZOAdminKV();
+		kv.k = k;
+		kv.v = v;
+		m.props.Insert(kv);
+	}
+
+	static void Collect(array<ref DZOAdminMarker> result)
+	{
+		foreach (TerritoryFlag f : DZOAdminRegistry.s_Flags)
+		{
+			if (!f)
+				continue;
+			vector p = f.GetPosition();
+			DZOAdminMarker m = new DZOAdminMarker();
+			m.layer = LAYER_FLAGS;
+			m.id = "f" + f.GetID();
+			m.shape = "point";
+			m.x = p[0];
+			m.y = p[1];
+			m.z = p[2];
+			m.icon = "flag";
+			m.color = "#c0392b";
+			m.label = "Flag";
+			m.props = new array<ref DZOAdminKV>;
+			m.visibility = "operator";
+			m.source = "flags";
+			// A ttl of 0 means "no expiry" on the wire, so an expired refresher is a prop.
+			if (f.m_RefresherTimeRemaining > 0)
+				m.ttl = f.m_RefresherTimeRemaining;
+			else
+				Prop(m, "refresher", "expired");
+#ifdef EXPANSIONMODBASEBUILDING
+			if (f.HasExpansionTerritoryInformation() && f.GetTerritory() && f.GetTerritory().GetTerritoryName() != "")
+			{
+				string name = f.GetTerritory().GetTerritoryName();
+				Prop(m, "territory", name);
+				DZOAdminMarker t = new DZOAdminMarker();
+				t.layer = LAYER_TERRITORIES;
+				t.id = "t" + f.GetID();
+				t.shape = "circle";
+				t.x = p[0];
+				t.y = p[1];
+				t.z = p[2];
+				t.radius = GetExpansionSettings().GetTerritory().TerritorySize;
+				t.color = "#2f6fb5";
+				t.label = name;
+				t.props = new array<ref DZOAdminKV>;
+				t.visibility = "operator";
+				t.source = "territory";
+				result.Insert(t);
+			}
+#endif
+			result.Insert(m);
+		}
+	}
+}

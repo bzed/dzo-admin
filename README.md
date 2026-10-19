@@ -19,6 +19,7 @@ Layout: `src/DZOAdmin/` is the PBO root (`$PBOPREFIX$` = `DZOAdmin`).
 | | `Transport.c` | outbound `RestApi` POST with backoff |
 | | `Map.c` | `DZOAdmin_Map`, the marker API for other mods |
 | `4_World` | `Hooks.c` | vehicle/effect-area registries, class watch rules |
+| | `Flags.c` | territory flags and Expansion territories as markers |
 | | `World.c` | state readers and the admin actions |
 | `5_Mission` | `Service.c` | the sync loop, started from `MissionServer.OnInit` |
 

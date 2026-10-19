@@ -8,6 +8,7 @@ class DZOAdminRegistry
 {
 	static ref array<CarScript> s_Cars = new array<CarScript>;
 	static ref array<EffectArea> s_Areas = new array<EffectArea>;
+	static ref array<TerritoryFlag> s_Flags = new array<TerritoryFlag>;
 }
 
 modded class CarScript
@@ -97,6 +98,23 @@ modded class ItemBase
 	{
 		if (GetGame().IsServer())
 			DZOAdminWatch.OnEntityDelete(this);
+		super.EEDelete(parent);
+	}
+}
+
+// Territory flags are registered on creation, like the cars, so the map can show them (Flags.c).
+modded class TerritoryFlag
+{
+	override void EEInit()
+	{
+		super.EEInit();
+		if (GetGame().IsServer() && DZOAdminRegistry.s_Flags.Find(this) == -1)
+			DZOAdminRegistry.s_Flags.Insert(this);
+	}
+
+	override void EEDelete(EntityAI parent)
+	{
+		DZOAdminRegistry.s_Flags.RemoveItem(this);
 		super.EEDelete(parent);
 	}
 }
