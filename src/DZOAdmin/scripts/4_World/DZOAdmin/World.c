@@ -242,7 +242,13 @@ class DZOAdminWorld
 			if (!p || !p.GetIdentity())
 				continue;
 			if (c.style == "notification")
-				NotificationSystem.SendNotificationToPlayerIdentityExtended(p.GetIdentity(), 10, "Server", c.text, "");
+				NotificationSystem.SendNotificationToPlayerIdentityExtended(p.GetIdentity(), c.seconds, c.title, c.text, "");
+			else if (c.style == "expansion")
+			{
+				string failed = SendExpansion(p.GetIdentity(), c);
+				if (failed != "")
+					return failed;
+			}
 			else
 				p.Message(c.text, style);
 			sent++;
@@ -250,6 +256,26 @@ class DZOAdminWorld
 		if (sent == 0)
 			return "nobody to deliver to";
 		return "";
+	}
+
+	// The Expansion notification of the type c.notify_type, or an error text when Expansion is not loaded.
+	static string SendExpansion(PlayerIdentity id, DZOAdminCommand c)
+	{
+#ifdef EXPANSIONMODCORE
+		ExpansionNotificationType type = ExpansionNotificationType.TOAST;
+		switch (c.notify_type)
+		{
+		case "baguette": type = ExpansionNotificationType.BAGUETTE; break;
+		case "activity": type = ExpansionNotificationType.ACTIVITY; break;
+		case "killfeed": type = ExpansionNotificationType.KILLFEED; break;
+		case "market": type = ExpansionNotificationType.MARKET; break;
+		case "garage": type = ExpansionNotificationType.GARAGE; break;
+		}
+		ExpansionNotification(c.title, c.text, "", ARGB(255, 52, 152, 219), c.seconds, type).Create(id);
+		return "";
+#else
+		return "expansion notifications are not available";
+#endif
 	}
 
 	static string Teleport(DZOAdminCommand c)

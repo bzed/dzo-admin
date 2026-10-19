@@ -116,7 +116,10 @@ class DZOAdminCommand
 	string steam_id;   // target player, "" = everyone (message), the ground at x/z (spawn_item)
 	string to_steam_id; // teleport to this player
 	string text;
-	string style;      // message: chat (yellow), action (the same), blue, important (red), friendly (green), notification
+	string style;      // message: chat (yellow), action (the same), blue, important (red), friendly (green), notification, expansion
+	string notify_type; // message, style expansion: toast, baguette, activity, killfeed, market, garage
+	string title;      // message, notification and expansion: the heading
+	int seconds;       // message, notification and expansion: how long it stays on screen
 	string type;       // spawn_item, spawn_vehicle: class name
 	float quantity;    // spawn_item: 0 = as the game makes it, below 0 = max (a full stack)
 	bool attachments;
@@ -139,6 +142,8 @@ class DZOAdminSync
 	string world;
 	int seq;
 	bool hello;
+	// With the hello: what the mod can do beyond the basics, "expansion" when Expansion is loaded.
+	ref array<string> features;
 	// The in-game time of day in minutes since midnight; sent with every request, listed in `has` as "clock".
 	int clock;
 	// The JSON writer turns a null array into [], so the parts that are

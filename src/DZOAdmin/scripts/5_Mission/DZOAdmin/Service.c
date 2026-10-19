@@ -172,6 +172,14 @@ class DZOAdminService
 			string world;
 			GetGame().GetWorldName(world);
 			s.world = world;
+			s.features = new array<string>;
+#ifdef EXPANSIONMODCORE
+			s.features.Insert("expansion");
+#endif
+			string list = "";
+			foreach (string feature : s.features)
+				list = list + " " + feature;
+			Print("[DZOAdmin] features:" + list);
 		}
 		if (m_Hello || Due(m_LastPlayers, m_Config.players_s))
 		{
