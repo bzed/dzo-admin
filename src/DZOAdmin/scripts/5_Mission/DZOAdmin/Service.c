@@ -118,6 +118,7 @@ class DZOAdminService
 		m_Items = new DZOAdminTypeFeed(false);
 		m_Vehicles = new DZOAdminTypeFeed(true);
 		DZOAdminWatch.SetRules(m_Config.watch);
+		DZOAdminFeed.Enable();
 		m_Transport = new DZOAdminTransport(m_Config.endpoint);
 		int tick = Math.Max(250, m_Config.sync_ms);
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Tick, tick, true);
@@ -155,6 +156,11 @@ class DZOAdminService
 			m_Items.Restart();
 			m_Vehicles.Restart();
 		}
+		// The events of the last request: gone for good when dzo answered it, otherwise sent again.
+		if (m_Transport.m_LastOk)
+			DZOAdminFeed.Ack();
+		else
+			DZOAdminFeed.Retry();
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
 		s.token = m_Config.token;
@@ -211,6 +217,12 @@ class DZOAdminService
 			s.events = new array<ref DZOAdminEvent>;
 			DZOAdminWorld.CollectEvents(s.events);
 			m_LastEvents = now;
+		}
+		array<ref DZOAdminFeedEvent> events = DZOAdminFeed.Take();
+		if (events.Count() > 0)
+		{
+			s.feed = events;
+			s.has.Insert("feed");
 		}
 		s.types = m_Items.Next();
 		s.vehicle_types = m_Vehicles.Next();
@@ -284,5 +296,18 @@ modded class MissionServer
 	{
 		super.OnInit();
 		DZOAdminService.Start();
+	}
+
+	override void InvokeOnConnect(PlayerBase player, PlayerIdentity identity)
+	{
+		super.InvokeOnConnect(player, identity);
+		DZOAdminFeed.Joined(player, identity);
+	}
+
+	// The feed entry is made first: the game lets the player go in super, and the identity may be gone by then.
+	override void PlayerDisconnected(PlayerBase player, PlayerIdentity identity, string uid)
+	{
+		DZOAdminFeed.Left(player, identity, uid);
+		super.PlayerDisconnected(player, identity, uid);
 	}
 }

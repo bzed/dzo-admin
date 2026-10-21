@@ -135,6 +135,31 @@ class DZOAdminCommand
 	bool force;        // vehicle_delete: even with crew inside
 }
 
+// One thing that happened in the game (kills, deaths, joins, building, ...). The mod numbers them with
+// seq, so a batch that is sent again because the reply was lost is not counted twice. The actor is the
+// player who did it (steam_id, name, ai), the target the one it happened to; a position is only valid
+// with has_pos. Which fields a kind fills is in the README.
+class DZOAdminFeedEvent
+{
+	int seq;
+	string kind;       // kill, death, connect, disconnect, build, dismantle, destroy, lock_cut, flag_raised, flag_lowered, stash_buried, stash_dug_up, dropped
+	string steam_id;
+	string name;
+	bool ai;           // the actor is a DayZ Expansion AI
+	string target_steam_id;
+	string target_name;
+	bool target_ai;
+	bool has_pos;
+	float x;
+	float y;
+	float z;
+	string weapon;     // display name of the weapon, the vehicle or the tool
+	float distance;    // metres from the shooter to the victim; 0 for melee and vehicles
+	string object;     // the class of the killer object, the part built, the stashed item
+	string cause;      // death: self, infected, animal, explosion, vehicle, other
+	string text;       // the class of the base object or flag; for dropped the number of events lost
+}
+
 class DZOAdminSync
 {
 	string token;
@@ -150,6 +175,8 @@ class DZOAdminSync
 	// The JSON writer turns a null array into [], so the parts that are
 	// really included are listed here: players, vehicles, markers, events.
 	ref array<string> has;
+	// The game events since the last successful sync; "feed" is in `has` when there are any.
+	ref array<ref DZOAdminFeedEvent> feed;
 	ref array<ref DZOAdminPlayer> players;
 	ref array<ref DZOAdminVehicle> vehicles;
 	ref array<ref DZOAdminMarker> markers;

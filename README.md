@@ -20,6 +20,8 @@ Layout: `src/DZOAdmin/` is the PBO root (`$PBOPREFIX$` = `DZOAdmin`).
 | | `Map.c` | `DZOAdmin_Map`, the marker API for other mods |
 | `4_World` | `Hooks.c` | vehicle/effect-area registries, class watch rules |
 | | `Flags.c` | territory flags and Expansion territories as markers |
+| | `Feed.c` | the event feed: buffer, kills and deaths, joins and leaves |
+| | `FeedHooks.c` | the event feed: base building, raids, flags, stashes |
 | | `World.c` | state readers and the admin actions |
 | `5_Mission` | `Service.c` | the sync loop, started from `MissionServer.OnInit` |
 
@@ -43,6 +45,27 @@ is `{"ok": true, "protocol": 1, "commands": [...]}`. Commands: `message`,
 `teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_delete`, `flag_raise`; the field list is
 `DZOAdminCommand` in `Proto.c`. A command id the mod has already executed is
 answered from memory, not executed again.
+
+## Event feed
+
+The mod reports what happens in the game as an optional part `feed` of the sync (`has` lists `"feed"`; the
+protocol stays 1). Events are buffered and go out with the next sync, numbered by `seq` (from 1 for each start of
+the server), so a batch that is sent again because the reply was lost is counted once by dzo. At most 256
+events wait while dzo cannot be reached; older ones are replaced by one `dropped` event with their count.
+Every event has the fields of `DZOAdminFeedEvent` (`Proto.c`); the ones a kind does not use stay empty:
+
+| kind | actor (`steam_id`, `name`, `ai`) | other fields |
+|---|---|---|
+| `kill` | the killer, an Expansion AI has `ai` and the name `AI (faction)` | target = the victim (`target_*`), `weapon` (display name; `fists`; the vehicle for a road kill), `distance` in metres (0 for melee and vehicles), position of the victim |
+| `death` | none | target = the victim, `cause`: `self` (starved, bled, drowned, suicide), `infected`, `animal`, `explosion`, `vehicle` (no driver), `other`; `object` = class of the killer object |
+| `connect`, `disconnect` | the player, position of the player | |
+| `build`, `dismantle`, `destroy` | the player (none when nothing player-driven destroyed the part) | `object` = part, `text` = class of the base object, position of the object. A raid is one `destroy`; the parts that fall with it are not reported |
+| `lock_cut` | the player | `weapon` = tool, `text` = the fence. The vanilla action is deprecated in 1.30 and no item offers it; mods that bring it back are reported |
+| `flag_raised`, `flag_lowered` | the player | `object` = the flag pole class, `text` = the flag cloth class. dzo's own `flag_raise` is in dzo's audit log instead |
+| `stash_buried`, `stash_dug_up` | the player | `object` = the stashed item's class |
+| `dropped` | | `text` = number of events lost |
+
+Chat is not reported by the mod: the 1.30 server scripts get no chat event. dzo reads it from BattlEye RCon.
 
 ## Map markers for other mods
 
