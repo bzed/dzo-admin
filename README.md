@@ -20,6 +20,8 @@ Layout: `src/DZOAdmin/` is the PBO root (`$PBOPREFIX$` = `DZOAdmin`).
 | | `Map.c` | `DZOAdmin_Map`, the marker API for other mods |
 | `4_World` | `Hooks.c` | vehicle/effect-area registries, class watch rules |
 | | `Flags.c` | territory flags and Expansion territories as markers |
+| | `Rebuilt.c` | rebuilt houses and wells (layers `Rebuilt houses`, `Rebuilt wells`, with the decay time as ttl) and the tunnel entrances (layer `Tunnel entrances`, another colour with a usable ladder) |
+| | `Sandstorm.c` | an active sandstorm, sampled as light and heavy rectangles on the layer `Sandstorm` plus a centre marker |
 | | `Feed.c` | the event feed: buffer, kills and deaths, joins and leaves |
 | | `FeedHooks.c` | the event feed: base building, raids, flags, stashes |
 | | `World.c` | state readers and the admin actions |

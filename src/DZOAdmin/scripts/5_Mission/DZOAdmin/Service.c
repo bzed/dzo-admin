@@ -209,6 +209,8 @@ class DZOAdminService
 			DZOAdmin_Map.Snapshot(s.markers, s.layers);
 			DZOAdminWatch.WatchMarkers(s.markers);
 			DZOAdminFlags.Collect(s.markers, s.layers);
+			DZOAdminRebuilt.Collect(s.markers, s.layers);
+			DZOAdminSandstorm.Collect(s.markers, s.layers);
 			m_LastMarkers = now;
 		}
 		if (m_Hello || Due(m_LastEvents, m_Config.events_s))

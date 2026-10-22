@@ -9,6 +9,7 @@ class DZOAdminRegistry
 	static ref array<CarScript> s_Cars = new array<CarScript>;
 	static ref array<EffectArea> s_Areas = new array<EffectArea>;
 	static ref array<TerritoryFlag> s_Flags = new array<TerritoryFlag>;
+	static ref array<BuildingBase> s_Rebuildables = new array<BuildingBase>;
 }
 
 modded class CarScript
@@ -64,20 +65,28 @@ modded class EffectArea
 // Buildings: the objects the Central Economy places for its events (wrecks, crashed helicopters,
 // containers, cisterns) are buildings and houses. Whatever a watch rule selects becomes a marker, so the
 // events show up on the map by the class of their object. The map's own buildings cost one lookup of
-// their type in a cache each.
+// their type in a cache each. The buildings that can be rebuilt (DayZ 1.30: a construction component) are
+// also registered, so the map can show the rebuilt ones (Rebuilt.c).
 modded class BuildingBase
 {
 	override void EEInit()
 	{
 		super.EEInit();
-		if (DZOAdminWatch.s_Rules && GetGame().IsServer())
+		if (!GetGame().IsServer())
+			return;
+		if (DZOAdminWatch.s_Rules)
 			DZOAdminWatch.OnEntityInit(this);
+		if (ConstructionBase.Cast(GetConstructionBasic()) && DZOAdminRegistry.s_Rebuildables.Find(this) == -1)
+			DZOAdminRegistry.s_Rebuildables.Insert(this);
 	}
 
 	override void EEDelete(EntityAI parent)
 	{
 		if (GetGame().IsServer())
+		{
 			DZOAdminWatch.OnEntityDelete(this);
+			DZOAdminRegistry.s_Rebuildables.RemoveItem(this);
+		}
 		super.EEDelete(parent);
 	}
 }
