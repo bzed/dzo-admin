@@ -58,7 +58,7 @@ Every event has the fields of `DZOAdminFeedEvent` (`Proto.c`); the ones a kind d
 
 | kind | actor (`steam_id`, `name`, `ai`) | other fields |
 |---|---|---|
-| `kill` | the killer, an Expansion AI has `ai` and the name `AI (faction)` | target = the victim (`target_*`), `weapon` (display name; `fists`; the vehicle for a road kill), `distance` in metres (0 for melee and vehicles), position of the victim |
+| `kill` | the killer, an Expansion AI has `ai` and the name `AI "Frida" (faction)` (its own name and faction, each when it has one) | target = the victim (`target_*`), `weapon` (display name; `fists`; the vehicle for a road kill), `distance` in metres (0 for melee and vehicles), position of the victim |
 | `death` | none | target = the victim, `cause`: `self` (starved, bled, drowned, suicide), `infected`, `animal`, `explosion`, `vehicle` (no driver), `other`; `object` = class of the killer object |
 | `connect`, `disconnect` | the player, position of the player | |
 | `build`, `dismantle`, `destroy` | the player (none when nothing player-driven destroyed the part) | `object` = part, `text` = class of the base object, position of the object. A raid is one `destroy`; the parts that fall with it are not reported |

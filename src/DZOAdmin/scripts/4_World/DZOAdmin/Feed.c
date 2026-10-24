@@ -108,9 +108,14 @@ class DZOAdminFeed
 	}
 
 #ifdef EXPANSIONMODAI
-	// "AI" plus the faction in parentheses ("AI (East)"), when the AI's group has one.
+	// "AI" plus its own name in quotes and the faction in parentheses (AI "Frida" (East)); each part only
+	// when the AI has it.
 	protected static string AIName(eAIBase ai)
 	{
+		string result = "AI";
+		string own = ai.GetCachedName();
+		if (own != "")
+			result += " \"" + own + "\"";
 		eAIGroup group = ai.GetGroup();
 		if (group)
 		{
@@ -121,10 +126,10 @@ class DZOAdminFeed
 				if (n == "")
 					n = faction.GetName();
 				if (n != "")
-					return "AI (" + n + ")";
+					result += " (" + n + ")";
 			}
 		}
-		return "AI";
+		return result;
 	}
 #endif
 
