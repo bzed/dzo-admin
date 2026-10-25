@@ -44,7 +44,7 @@ State fields are only present when due (players every `players_s`, vehicles
 every `vehicles_s`, markers every `markers_s`, events every `events_s`); the
 first sync after a start has `"hello": true` and carries everything. The reply
 is `{"ok": true, "protocol": 1, "commands": [...]}`. Commands: `message`,
-`teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_delete`, `flag_raise`; the field list is
+`teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_move`, `vehicle_delete`, `flag_raise`; the field list is
 `DZOAdminCommand` in `Proto.c`. A command id the mod has already executed is
 answered from memory, not executed again.
 
@@ -83,7 +83,8 @@ repository): it compiles, loads and syncs; the players state, messages in all
 three styles, teleport, `spawn_item` (inventory, hands, ground), the refusals,
 class watch rules on items, the crew of a vehicle, and vehicle repair/delete
 work. On 1.30 motorbikes (`MotorbikeScript`, which is not a `CarScript`) are reported as vehicles
-of `kind` `"motorbike"` (cars are `"car"`) and can be repaired (fuel only) and deleted; that part
+of `kind` `"motorbike"` (cars are `"car"`) and can be repaired (fuel only) and deleted; boats (`BoatScript`, also not a `CarScript`) are reported as `"boat"` the same way, and so are the boats of DayZ
+Expansion (`ExpansionBoatScript` is a `CarScript`); a boat that is spawned or moved is put on the water surface. That part
 is left out on 1.29, which has no motorbikes, and was verified on 1.30 only. See the dzo README,
 "Status".
 

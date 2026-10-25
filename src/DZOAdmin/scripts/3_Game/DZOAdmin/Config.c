@@ -26,6 +26,7 @@ class DZOAdminConfig
 	int markers_s = 10;
 	int events_s = 30;
 	bool allow_spawn = true;
+	int move_occupied_max = 200; // vehicle_move: the farthest, in metres, a vehicle with players inside may go; 0 = never
 	ref array<string> allow_classes; // empty = every public class
 	ref array<string> deny_classes;
 	ref array<ref DZOAdminWatchRule> watch;

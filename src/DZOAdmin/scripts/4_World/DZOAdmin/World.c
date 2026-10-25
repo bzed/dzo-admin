@@ -82,6 +82,10 @@ class DZOAdminWorld
 			DZOAdminVehicle v = new DZOAdminVehicle();
 			v.id = VehicleId(c);
 			v.kind = "car";
+#ifdef EXPANSIONMODVEHICLE
+			if (ExpansionBoatScript.Cast(c))
+				v.kind = "boat";
+#endif
 			v.type = c.GetType();
 			vector pos = c.GetPosition();
 			v.x = pos[0];
@@ -111,6 +115,7 @@ class DZOAdminWorld
 #endif
 #ifndef DAYZ_1_29
 		DZOAdminBikes.Collect(list);
+		DZOAdminBoats.Collect(list);
 #endif
 	}
 
@@ -364,6 +369,16 @@ class DZOAdminWorld
 	// The most stacks one spawn makes: a quantity of 20 bricks is as many stacks as the stack size needs.
 	static const int MAX_STACKS = 50;
 
+	// The height of the ground at x/z, or of the water above it: where a boat floats.
+	static float RestY(float x, float z)
+	{
+		float y = GetGame().SurfaceY(x, z);
+		float depth = GetGame().GetWaterDepth(Vector(x, y, z));
+		if (depth > 0)
+			y += depth;
+		return y;
+	}
+
 	// The point on the ground at x/z.
 	static vector GroundAt(float x, float z)
 	{
@@ -469,7 +484,7 @@ class DZOAdminWorld
 			return "class not allowed";
 		if (!GetGame().ConfigIsExisting("CfgVehicles " + c.type) || !GetGame().IsKindOf(c.type, "Transport"))
 			return "not a vehicle class";
-		EntityAI v = EntityAI.Cast(GetGame().CreateObjectEx(c.type, GroundAt(c.x, c.z), ECE_PLACE_ON_SURFACE | ECE_CREATEPHYSICS | ECE_UPDATEPATHGRAPH));
+		EntityAI v = EntityAI.Cast(GetGame().CreateObjectEx(c.type, Vector(c.x, RestY(c.x, c.z), c.z), ECE_PLACE_ON_SURFACE | ECE_CREATEPHYSICS | ECE_UPDATEPATHGRAPH));
 		if (!v)
 			return "could not create the vehicle";
 		v.OnDebugSpawn();
@@ -586,6 +601,9 @@ class DZOAdminWorld
 			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
 			if (bike)
 				return DZOAdminBikes.Repair(bike, scope);
+			BoatScript boat = DZOAdminBoats.Find(c.vehicle);
+			if (boat)
+				return DZOAdminBoats.Repair(boat, scope);
 #endif
 			return "vehicle not found";
 		}
@@ -631,8 +649,121 @@ class DZOAdminWorld
 			FlipEntity(bike);
 			return "";
 		}
+		BoatScript boat = DZOAdminBoats.Find(c.vehicle);
+		if (boat)
+		{
+			FlipEntity(boat);
+			return "";
+		}
 #endif
 		return "vehicle not found";
+	}
+
+	// How long the crew and the vehicle take no damage after a move with players inside: the landing and
+	// the physics settling can hurt them otherwise.
+	static const int MOVE_PROTECT_MS = 3000;
+
+	// Puts a vehicle on the ground at x/z, upright, at rest, keeping its heading. A vehicle with players
+	// inside goes at most move_occupied_max metres (they stay seated and the client keeps its terrain), and
+	// the crew and the vehicle take no damage for MOVE_PROTECT_MS.
+	static string VehicleMove(DZOAdminCommand c, DZOAdminConfig cfg)
+	{
+		EntityAI e;
+		array<PlayerBase> crew = new array<PlayerBase>;
+		CarScript car = FindVehicle(c.vehicle);
+		if (car)
+		{
+			e = car;
+			for (int i = 0; i < car.CrewSize(); i++)
+			{
+				PlayerBase p = PlayerBase.Cast(car.CrewMember(i));
+				if (p)
+					crew.Insert(p);
+			}
+		}
+#ifndef DAYZ_1_29
+		else
+		{
+			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
+			if (bike)
+			{
+				e = bike;
+				for (int j = 0; j < bike.CrewSize(); j++)
+				{
+					PlayerBase bp = PlayerBase.Cast(bike.CrewMember(j));
+					if (bp)
+						crew.Insert(bp);
+				}
+			}
+			else
+			{
+				BoatScript boat = DZOAdminBoats.Find(c.vehicle);
+				if (boat)
+				{
+					e = boat;
+					for (int k = 0; k < boat.CrewSize(); k++)
+					{
+						PlayerBase wp = PlayerBase.Cast(boat.CrewMember(k));
+						if (wp)
+							crew.Insert(wp);
+					}
+				}
+			}
+		}
+#endif
+		if (!e)
+			return "vehicle not found";
+		float size = GetGame().GetWorld().GetWorldSize();
+		if (c.x < 0 || c.z < 0 || c.x > size || c.z > size)
+			return "position is outside the world";
+		vector from = e.GetPosition();
+		if (crew.Count() > 0)
+		{
+			if (cfg.move_occupied_max <= 0)
+				return "vehicle has players inside and moving those is switched off";
+			if (vector.Distance(Vector(from[0], 0, from[2]), Vector(c.x, 0, c.z)) > cfg.move_occupied_max)
+				return "too far with players inside (at most " + cfg.move_occupied_max.ToString() + " m)";
+		}
+
+		// Damage off first, so nothing between the move and the end of the protection counts.
+		array<PlayerBase> restore = new array<PlayerBase>;
+		foreach (PlayerBase m : crew)
+		{
+			if (m.GetAllowDamage())
+			{
+				m.SetAllowDamage(false);
+				restore.Insert(m);
+			}
+		}
+		bool restoreVehicle = e.GetAllowDamage();
+		if (restoreVehicle)
+			e.SetAllowDamage(false);
+
+		vector pos = Vector(c.x, RestY(c.x, c.z) + 1.0, c.z);
+		float yaw = e.GetOrientation()[0];
+		e.SetPosition(pos);
+		e.SetOrientation(Vector(yaw, 0, 0));
+		Physics ph = e.GetPhysics();
+		if (ph)
+			ph.SetVelocity("0 0 0");
+		dBodySetAngularVelocity(e, "0 0 0");
+		dBodyActive(e, ActiveState.ACTIVE);
+
+		if (restore.Count() > 0 || restoreVehicle)
+			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(DZOAdminWorld.EndMoveProtection, MOVE_PROTECT_MS, false, e, restore, restoreVehicle);
+		return "";
+	}
+
+	// Switches the damage on again for whoever VehicleMove switched it off. The objects may be gone by now.
+	static void EndMoveProtection(EntityAI vehicle, array<PlayerBase> crew, bool restoreVehicle)
+	{
+		if (restoreVehicle && vehicle)
+			vehicle.SetAllowDamage(true);
+		foreach (PlayerBase p : crew)
+		{
+			if (p)
+				p.SetAllowDamage(true);
+		}
 	}
 
 	static string VehicleDelete(DZOAdminCommand c)
@@ -647,6 +778,14 @@ class DZOAdminWorld
 				if (!c.force && bike.IsAnyCrewPresent())
 					return "vehicle has crew inside";
 				GetGame().ObjectDelete(bike);
+				return "";
+			}
+			BoatScript boat = DZOAdminBoats.Find(c.vehicle);
+			if (boat)
+			{
+				if (!c.force && boat.IsAnyCrewPresent())
+					return "vehicle has crew inside";
+				GetGame().ObjectDelete(boat);
 				return "";
 			}
 #endif
