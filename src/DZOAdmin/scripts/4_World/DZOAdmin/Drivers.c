@@ -4,8 +4,6 @@
 // Who drove a vehicle last. Taking the driver's seat counts as using the vehicle; passengers do not.
 // The memory is the mod's own and in RAM only: nothing is stored on the vehicles, so their persistence
 // is unchanged. It starts empty after a server restart (dzo keeps the record in its database).
-// Transport does not exist in 1.29, so the whole file is left out there.
-#ifndef DAYZ_1_29
 class DZOAdminDriver
 {
 	string steam_id;
@@ -62,4 +60,3 @@ class DZOAdminDrivers
 			v.driven_ago = 0;
 	}
 }
-#endif

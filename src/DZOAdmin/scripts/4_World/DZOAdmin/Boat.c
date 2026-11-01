@@ -4,8 +4,7 @@
 // Boats of the game (1.30): BoatScript is not a CarScript, so CarScript's registry in Hooks.c never sees
 // them. They are kept in a registry of their own and reported as vehicles of kind "boat". The boats of
 // DayZ Expansion (ExpansionBoatScript) are cars to the game and are reported as boats by World.c; Expansion's
-// Boat_01 is a BoatScript and is found here. 1.29 is left out like the motorbikes.
-#ifndef DAYZ_1_29
+// Boat_01 is a BoatScript and is found here.
 class DZOAdminBoats
 {
 	static ref array<BoatScript> s_Boats = new array<BoatScript>;
@@ -112,4 +111,3 @@ modded class BoatScript
 		DZOAdminDrivers.Entered(this, player);
 	}
 }
-#endif

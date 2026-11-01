@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Motorbikes (1.30): Motorbike is not a Car, so CarScript's registry in Hooks.c never sees them.
-// They are kept in a registry of their own and reported as vehicles of kind "motorbike". 1.29 has
-// no motorbikes, and no Transport class either, so the whole file is left out there.
-#ifndef DAYZ_1_29
+// They are kept in a registry of their own and reported as vehicles of kind "motorbike".
 class DZOAdminBikes
 {
 	static ref array<MotorbikeScript> s_Bikes = new array<MotorbikeScript>;
@@ -112,4 +110,3 @@ modded class MotorbikeScript
 		DZOAdminDrivers.Entered(this, player);
 	}
 }
-#endif

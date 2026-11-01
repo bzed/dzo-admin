@@ -28,19 +28,15 @@ modded class CarScript
 	override void EEDelete(EntityAI parent)
 	{
 		DZOAdminRegistry.s_Cars.RemoveItem(this);
-#ifndef DAYZ_1_29
 		DZOAdminDrivers.Forget(this);
-#endif
 		DZOAdminWatch.OnEntityDelete(this);
 		super.EEDelete(parent);
 	}
-#ifndef DAYZ_1_29
 	override void OnDriverEnter(Human player)
 	{
 		super.OnDriverEnter(player);
 		DZOAdminDrivers.Entered(this, player);
 	}
-#endif
 }
 
 // An area is registered when it is created, not when it goes live: a dynamic zone (a thrown M18

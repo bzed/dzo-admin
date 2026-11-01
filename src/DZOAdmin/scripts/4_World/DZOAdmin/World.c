@@ -108,18 +108,14 @@ class DZOAdminWorld
 			if (ev)
 				v.owner = ev.GetOwnerName();
 #endif
-#ifndef DAYZ_1_29
 			DZOAdminDrivers.Fill(c, v);
-#endif
 			list.Insert(v);
 		}
 #ifdef EXPANSIONMODVEHICLE
 		CollectCovers(list);
 #endif
-#ifndef DAYZ_1_29
 		DZOAdminBikes.Collect(list);
 		DZOAdminBoats.Collect(list);
-#endif
 	}
 
 #ifdef EXPANSIONMODVEHICLE
@@ -600,14 +596,12 @@ class DZOAdminWorld
 		CarScript car = FindVehicle(c.vehicle);
 		if (!car)
 		{
-#ifndef DAYZ_1_29
 			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
 			if (bike)
 				return DZOAdminBikes.Repair(bike, scope);
 			BoatScript boat = DZOAdminBoats.Find(c.vehicle);
 			if (boat)
 				return DZOAdminBoats.Repair(boat, scope);
-#endif
 			return "vehicle not found";
 		}
 		if (scope == "all" || scope == "missing")
@@ -645,7 +639,6 @@ class DZOAdminWorld
 			FlipEntity(car);
 			return "";
 		}
-#ifndef DAYZ_1_29
 		MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
 		if (bike)
 		{
@@ -658,7 +651,6 @@ class DZOAdminWorld
 			FlipEntity(boat);
 			return "";
 		}
-#endif
 		return "vehicle not found";
 	}
 
@@ -684,7 +676,6 @@ class DZOAdminWorld
 					crew.Insert(p);
 			}
 		}
-#ifndef DAYZ_1_29
 		else
 		{
 			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
@@ -713,7 +704,6 @@ class DZOAdminWorld
 				}
 			}
 		}
-#endif
 		if (!e)
 			return "vehicle not found";
 		float size = GetGame().GetWorld().GetWorldSize();
@@ -774,7 +764,6 @@ class DZOAdminWorld
 		CarScript car = FindVehicle(c.vehicle);
 		if (!car)
 		{
-#ifndef DAYZ_1_29
 			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
 			if (bike)
 			{
@@ -791,7 +780,6 @@ class DZOAdminWorld
 				GetGame().ObjectDelete(boat);
 				return "";
 			}
-#endif
 			return "vehicle not found";
 		}
 		if (!c.force && car.IsAnyCrewPresent())

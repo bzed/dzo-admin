@@ -78,20 +78,19 @@ code), the `DZOAdmin_Map` API behind `#ifdef DZO_ADMIN`, or JSON files in
 
 ## Status
 
-Tested on DayZ 1.29 (stable) and 1.30 (experimental) against the real dzo
+Tested on DayZ 1.30 against the real dzo
 endpoint, with a real DayZ client (`scripts/test-client.sh` in the dzo
 repository): it compiles, loads and syncs; the players state, messages in all
 three styles, teleport, `spawn_item` (inventory, hands, ground), the refusals,
 class watch rules on items, the crew of a vehicle, and vehicle repair/delete
-work. On 1.30 motorbikes (`MotorbikeScript`, which is not a `CarScript`) are reported as vehicles
+work. Motorbikes (`MotorbikeScript`, which is not a `CarScript`) are reported as vehicles
 of `kind` `"motorbike"` (cars are `"car"`) and can be repaired (fuel only) and deleted; boats (`BoatScript`, also not a `CarScript`) are reported as `"boat"` the same way, and so are the boats of DayZ
-Expansion (`ExpansionBoatScript` is a `CarScript`); a boat that is spawned or moved is put on the water surface. That part
-is left out on 1.29, which has no motorbikes, and was verified on 1.30 only.
+Expansion (`ExpansionBoatScript` is a `CarScript`); a boat that is spawned or moved is put on the water surface.
 
 Last driver (0.8.0, hello feature `driver`): the mod remembers, in RAM only, who last took the driver's seat of each
 car, motorbike and boat (`OnDriverEnter`; passengers do not count) and reports it in each vehicle as `driver` (Steam ID),
 `driver_name` and `driven_ago` (seconds; 0 while that player sits there). Nothing is stored on the vehicles, so their
-persistence is unchanged, and the memory is empty after a server restart (dzo keeps the record). Left out on 1.29. See the dzo README,
+persistence is unchanged, and the memory is empty after a server restart (dzo keeps the record). See the dzo README,
 "Status".
 
 Enforce Script reminders from the boot: `proto` and `out` are reserved words
