@@ -46,6 +46,7 @@ class DZOAdminBoats
 				if (crew && crew.GetIdentity())
 					v.occupants.Insert(crew.GetIdentity().GetPlainId());
 			}
+			DZOAdminDrivers.Fill(b, v);
 			list.Insert(v);
 		}
 	}
@@ -100,8 +101,15 @@ modded class BoatScript
 	override void EEDelete(EntityAI parent)
 	{
 		DZOAdminBoats.s_Boats.RemoveItem(this);
+		DZOAdminDrivers.Forget(this);
 		DZOAdminWatch.OnEntityDelete(this);
 		super.EEDelete(parent);
+	}
+
+	override void OnDriverEnter(Human player)
+	{
+		super.OnDriverEnter(player);
+		DZOAdminDrivers.Entered(this, player);
 	}
 }
 #endif

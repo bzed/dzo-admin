@@ -39,6 +39,9 @@ class DZOAdminVehicle
 	ref array<string> occupants;
 	string owner;      // DayZ Expansion: the name on the key chain, when it is loaded
 	bool covered;      // DayZ Expansion: stored under a cover, only its class and place are known
+	string driver;       // Steam ID of the last player in the driver's seat since the mod started, "" when none
+	string driver_name;  // that player's name when they sat down
+	float driven_ago;    // seconds since then; 0 while they sit there
 }
 
 class DZOAdminKV

@@ -108,6 +108,9 @@ class DZOAdminWorld
 			if (ev)
 				v.owner = ev.GetOwnerName();
 #endif
+#ifndef DAYZ_1_29
+			DZOAdminDrivers.Fill(c, v);
+#endif
 			list.Insert(v);
 		}
 #ifdef EXPANSIONMODVEHICLE

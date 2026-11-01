@@ -179,6 +179,7 @@ class DZOAdminService
 			GetGame().GetWorldName(world);
 			s.world = world;
 			s.features = new array<string>;
+			s.features.Insert("driver");
 #ifdef EXPANSIONMODCORE
 			s.features.Insert("expansion");
 #endif

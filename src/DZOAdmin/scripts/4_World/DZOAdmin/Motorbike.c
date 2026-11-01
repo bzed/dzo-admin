@@ -45,6 +45,7 @@ class DZOAdminBikes
 				if (crew && crew.GetIdentity())
 					v.occupants.Insert(crew.GetIdentity().GetPlainId());
 			}
+			DZOAdminDrivers.Fill(b, v);
 			list.Insert(v);
 		}
 	}
@@ -100,8 +101,15 @@ modded class MotorbikeScript
 	override void EEDelete(EntityAI parent)
 	{
 		DZOAdminBikes.s_Bikes.RemoveItem(this);
+		DZOAdminDrivers.Forget(this);
 		DZOAdminWatch.OnEntityDelete(this);
 		super.EEDelete(parent);
+	}
+
+	override void OnDriverEnter(Human player)
+	{
+		super.OnDriverEnter(player);
+		DZOAdminDrivers.Entered(this, player);
 	}
 }
 #endif

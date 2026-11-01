@@ -19,6 +19,7 @@ Layout: `src/DZOAdmin/` is the PBO root (`$PBOPREFIX$` = `DZOAdmin`).
 | | `Transport.c` | outbound `RestApi` POST with backoff |
 | | `Map.c` | `DZOAdmin_Map`, the marker API for other mods |
 | `4_World` | `Hooks.c` | vehicle/effect-area registries, class watch rules |
+| | `Drivers.c` | the last driver of each vehicle (`driver`, `driver_name`, `driven_ago`; hello feature `driver`) |
 | | `Flags.c` | territory flags and Expansion territories as markers |
 | | `Rebuilt.c` | rebuilt houses and wells (layers `Rebuilt houses`, `Rebuilt wells`, with the decay time as ttl) and the tunnel entrances (layer `Tunnel entrances`, another colour with a usable ladder) |
 | | `Sandstorm.c` | an active sandstorm, sampled as light and heavy rectangles on the layer `Sandstorm` plus a centre marker |
@@ -85,7 +86,12 @@ class watch rules on items, the crew of a vehicle, and vehicle repair/delete
 work. On 1.30 motorbikes (`MotorbikeScript`, which is not a `CarScript`) are reported as vehicles
 of `kind` `"motorbike"` (cars are `"car"`) and can be repaired (fuel only) and deleted; boats (`BoatScript`, also not a `CarScript`) are reported as `"boat"` the same way, and so are the boats of DayZ
 Expansion (`ExpansionBoatScript` is a `CarScript`); a boat that is spawned or moved is put on the water surface. That part
-is left out on 1.29, which has no motorbikes, and was verified on 1.30 only. See the dzo README,
+is left out on 1.29, which has no motorbikes, and was verified on 1.30 only.
+
+Last driver (0.8.0, hello feature `driver`): the mod remembers, in RAM only, who last took the driver's seat of each
+car, motorbike and boat (`OnDriverEnter`; passengers do not count) and reports it in each vehicle as `driver` (Steam ID),
+`driver_name` and `driven_ago` (seconds; 0 while that player sits there). Nothing is stored on the vehicles, so their
+persistence is unchanged, and the memory is empty after a server restart (dzo keeps the record). Left out on 1.29. See the dzo README,
 "Status".
 
 Enforce Script reminders from the boot: `proto` and `out` are reserved words
