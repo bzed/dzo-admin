@@ -85,7 +85,7 @@ three styles, teleport, `spawn_item` (inventory, hands, ground), the refusals,
 class watch rules on items, the crew of a vehicle, and vehicle repair/delete
 work. Motorbikes (`MotorbikeScript`, which is not a `CarScript`) are reported as vehicles
 of `kind` `"motorbike"` (cars are `"car"`) and can be repaired (fuel only) and deleted; boats (`BoatScript`, also not a `CarScript`) are reported as `"boat"` the same way, and so are the boats of DayZ
-Expansion (`ExpansionBoatScript` is a `CarScript`); a boat that is spawned or moved is put on the water surface. Boats are not flipped: `vehicle_flip` answers `boats cannot be flipped`, since a boat cannot capsize in the game.
+Expansion (`ExpansionBoatScript` is a `CarScript`); a boat that is spawned or moved is put on the water surface.
 
 Last driver (0.8.0, hello feature `driver`): the mod remembers, in RAM only, who last took the driver's seat of each
 car, motorbike and boat (`OnDriverEnter`; passengers do not count) and reports it in each vehicle as `driver` (Steam ID),

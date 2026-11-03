@@ -631,16 +631,11 @@ class DZOAdminWorld
 		return "";
 	}
 
-	// Boats are not flipped: a boat cannot capsize in the game, so there is nothing to stand upright.
 	static string VehicleFlip(DZOAdminCommand c)
 	{
 		CarScript car = FindVehicle(c.vehicle);
 		if (car)
 		{
-#ifdef EXPANSIONMODVEHICLE
-			if (ExpansionBoatScript.Cast(car))
-				return "boats cannot be flipped";
-#endif
 			FlipEntity(car);
 			return "";
 		}
@@ -650,8 +645,12 @@ class DZOAdminWorld
 			FlipEntity(bike);
 			return "";
 		}
-		if (DZOAdminBoats.Find(c.vehicle))
-			return "boats cannot be flipped";
+		BoatScript boat = DZOAdminBoats.Find(c.vehicle);
+		if (boat)
+		{
+			FlipEntity(boat);
+			return "";
+		}
 		return "vehicle not found";
 	}
 
