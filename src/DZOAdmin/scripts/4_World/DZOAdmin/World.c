@@ -378,6 +378,13 @@ class DZOAdminWorld
 		return y;
 	}
 
+	// The highest surface at x/z: the ground or the water, or a road, rock or roof on top of it. A vehicle put below
+	// that is inside the object: the physics throws it out, or drops it through the world, where the game deletes it.
+	static float TopY(float x, float z)
+	{
+		return Math.Max(RestY(x, z), GetGame().SurfaceRoadY(x, z));
+	}
+
 	// The point on the ground at x/z.
 	static vector GroundAt(float x, float z)
 	{
@@ -483,7 +490,11 @@ class DZOAdminWorld
 			return "class not allowed";
 		if (!GetGame().ConfigIsExisting("CfgVehicles " + c.type) || !GetGame().IsKindOf(c.type, "Transport"))
 			return "not a vehicle class";
-		EntityAI v = EntityAI.Cast(GetGame().CreateObjectEx(c.type, Vector(c.x, RestY(c.x, c.z), c.z), ECE_PLACE_ON_SURFACE | ECE_CREATEPHYSICS | ECE_UPDATEPATHGRAPH));
+		EntityAI v;
+		if (GetGame().IsKindOf(c.type, "BoatScript"))
+			v = EntityAI.Cast(GetGame().CreateObjectEx(c.type, Vector(c.x, RestY(c.x, c.z), c.z), ECE_PLACE_ON_SURFACE | ECE_CREATEPHYSICS | ECE_UPDATEPATHGRAPH));
+		else
+			v = EntityAI.Cast(GetGame().CreateObjectEx(c.type, Vector(c.x, TopY(c.x, c.z) + 0.5, c.z), ECE_CREATEPHYSICS | ECE_UPDATEPATHGRAPH));
 		if (!v)
 			return "could not create the vehicle";
 		v.OnDebugSpawn();
@@ -732,7 +743,12 @@ class DZOAdminWorld
 		if (restoreVehicle)
 			e.SetAllowDamage(false);
 
-		vector pos = Vector(c.x, RestY(c.x, c.z) + 1.0, c.z);
+		float restY;
+		if (BoatScript.Cast(e))
+			restY = RestY(c.x, c.z); // floats, also under a bridge
+		else
+			restY = TopY(c.x, c.z);
+		vector pos = Vector(c.x, restY + 1.0, c.z);
 		float yaw = e.GetOrientation()[0];
 		e.SetPosition(pos);
 		e.SetOrientation(Vector(yaw, 0, 0));
