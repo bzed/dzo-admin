@@ -272,6 +272,11 @@ class DZOAdminFeed
 				e.weapon = weapon;
 				e.object = killer.GetType();
 			}
+			else if (victim.CommitedSuicide())
+			{
+				e.cause = "self";
+				e.object = killer.GetType();
+			}
 			else
 			{
 				e.cause = "other";
