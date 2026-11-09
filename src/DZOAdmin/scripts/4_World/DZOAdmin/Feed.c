@@ -87,7 +87,13 @@ class DZOAdminFeed
 			return;
 		array<ref DZOAdminFeedEvent> back = new array<ref DZOAdminFeedEvent>;
 		foreach (DZOAdminFeedEvent e : s_InFlight)
-			back.Insert(e);
+		{
+			// A dropped event goes back as its count: back in the queue, a trim would count it as one.
+			if (e.kind == "dropped")
+				s_Dropped += e.text.ToInt();
+			else
+				back.Insert(e);
+		}
 		foreach (DZOAdminFeedEvent p : s_Pending)
 			back.Insert(p);
 		s_Pending = back;
