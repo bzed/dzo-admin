@@ -148,6 +148,9 @@ class DZOAdminService
 			m_Items.Restart();
 			m_Vehicles.Restart();
 		}
+		// The hello is only done once dzo answered the request that carried it.
+		if (m_Transport.m_LastOk)
+			m_Hello = false;
 		if (m_Transport.m_WantHello)
 		{
 			m_Hello = true;
@@ -236,7 +239,6 @@ class DZOAdminService
 				s.results.Insert(r);
 		}
 		m_Seq++;
-		m_Hello = false;
 		m_Transport.Send(s);
 		// A failed send drops this batch: state is re-pushed on the next
 		// interval, and dzo asks again for results it never saw (it
