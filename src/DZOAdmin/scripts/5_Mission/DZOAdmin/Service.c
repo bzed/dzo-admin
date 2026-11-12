@@ -183,6 +183,9 @@ class DZOAdminService
 #ifdef EXPANSIONMODCORE
 			s.features.Insert("expansion");
 #endif
+#ifdef EXPANSIONMODGARAGE
+			s.features.Insert("garage");
+#endif
 			string list = "";
 			foreach (string feature : s.features)
 				list = list + " " + feature;
@@ -200,6 +203,9 @@ class DZOAdminService
 			s.has.Insert("vehicles");
 			s.vehicles = new array<ref DZOAdminVehicle>;
 			DZOAdminWorld.CollectVehicles(s.vehicles);
+#ifdef EXPANSIONMODGARAGE
+			DZOAdminGarage.Collect(s.vehicles);
+#endif
 			m_LastVehicles = now;
 		}
 		if (m_Hello || Due(m_LastMarkers, m_Config.markers_s))

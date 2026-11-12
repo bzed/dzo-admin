@@ -20,6 +20,7 @@ Layout: `src/DZOAdmin/` is the PBO root (`$PBOPREFIX$` = `DZOAdmin`).
 | | `Map.c` | `DZOAdmin_Map`, the marker API for other mods |
 | `4_World` | `Hooks.c` | vehicle/effect-area registries, class watch rules |
 | | `Drivers.c` | the last driver of each vehicle (`driver`, `driver_name`, `driven_ago`; hello feature `driver`) |
+| | `Garage.c` | the vehicles stored in the Expansion virtual garage (`stored`, `stored_by`, `territory_id`, `owners`, `broken`; hello feature `garage`) |
 | | `Flags.c` | territory flags and Expansion territories as markers |
 | | `Rebuilt.c` | rebuilt houses and wells (layers `Rebuilt houses`, `Rebuilt wells`, with the decay time as ttl) and the tunnel entrances (layer `Tunnel entrances`, another colour with a usable ladder) |
 | | `Sandstorm.c` | an active sandstorm, sampled as light and heavy rectangles on the layer `Sandstorm` plus a centre marker |
