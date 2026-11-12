@@ -669,6 +669,27 @@ class DZOAdminWorld
 	// the physics settling can hurt them otherwise.
 	static const int MOVE_PROTECT_MS = 3000;
 
+	// Puts a vehicle upright on the ground at x/z, at rest, keeping its heading. A boat floats (RestY),
+	// anything else stands on the highest surface (TopY). Used by VehicleMove and by the garage actions,
+	// which put a restored vehicle down the same way (DZOAdminGarage).
+	static void PlaceVehicle(EntityAI e, float x, float z)
+	{
+		float restY;
+		if (BoatScript.Cast(e))
+			restY = RestY(x, z); // floats, also under a bridge
+		else
+			restY = TopY(x, z);
+		vector pos = Vector(x, restY + 1.0, z);
+		float yaw = e.GetOrientation()[0];
+		e.SetPosition(pos);
+		e.SetOrientation(Vector(yaw, 0, 0));
+		Physics ph = e.GetPhysics();
+		if (ph)
+			ph.SetVelocity("0 0 0");
+		dBodySetAngularVelocity(e, "0 0 0");
+		dBodyActive(e, ActiveState.ACTIVE);
+	}
+
 	// Puts a vehicle on the ground at x/z, upright, at rest, keeping its heading. A vehicle with players
 	// inside goes at most move_occupied_max metres (they stay seated and the client keeps its terrain), and
 	// the crew and the vehicle take no damage for MOVE_PROTECT_MS.
@@ -743,20 +764,7 @@ class DZOAdminWorld
 		if (restoreVehicle)
 			e.SetAllowDamage(false);
 
-		float restY;
-		if (BoatScript.Cast(e))
-			restY = RestY(c.x, c.z); // floats, also under a bridge
-		else
-			restY = TopY(c.x, c.z);
-		vector pos = Vector(c.x, restY + 1.0, c.z);
-		float yaw = e.GetOrientation()[0];
-		e.SetPosition(pos);
-		e.SetOrientation(Vector(yaw, 0, 0));
-		Physics ph = e.GetPhysics();
-		if (ph)
-			ph.SetVelocity("0 0 0");
-		dBodySetAngularVelocity(e, "0 0 0");
-		dBodyActive(e, ActiveState.ACTIVE);
+		PlaceVehicle(e, c.x, c.z);
 
 		if (restore.Count() > 0 || restoreVehicle)
 			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(DZOAdminWorld.EndMoveProtection, MOVE_PROTECT_MS, false, e, restore, restoreVehicle);

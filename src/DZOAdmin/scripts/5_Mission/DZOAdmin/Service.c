@@ -283,6 +283,12 @@ class DZOAdminService
 			err = DZOAdminWorld.VehicleDelete(c);
 		else if (c.kind == "flag_raise")
 			err = DZOAdminFlags.Raise(c);
+#ifdef EXPANSIONMODGARAGE
+		else if (c.kind == "storedvehicle_retrieve")
+			err = DZOAdminGarage.Retrieve(c);
+		else if (c.kind == "storedvehicle_move")
+			err = DZOAdminGarage.Move(c);
+#endif
 		else
 			err = "unknown command kind " + c.kind;
 		DZOAdminResult r = new DZOAdminResult();

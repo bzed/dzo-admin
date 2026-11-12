@@ -83,5 +83,103 @@ class DZOAdminGarage
 			}
 		}
 	}
+
+	// Brings a stored vehicle back into the world from its entity-storage file, at the place its
+	// garage entry keeps. deleteRestored = false is the safety net: the file survives a failed
+	// action, so the vehicle is not lost when what follows goes wrong.
+	protected static bool Restore(ExpansionGarageVehicleData vehicleData, out EntityAI entity)
+	{
+		ExpansionEntityStoragePlaceholder placeholder = ExpansionEntityStoragePlaceholder.GetByStoredEntityGlobalID(vehicleData.m_GlobalID);
+		if (!ExpansionEntityStorageModule.RestoreFromFile(vehicleData.GetEntityStorageFileName(), entity, placeholder, null, false))
+			return false;
+		// The placeholder is invisible and damage-immune; the vehicle carries its cargo again.
+		if (placeholder)
+			placeholder.Delete();
+		return true;
+	}
+
+	// Tells the online owners of a stored vehicle what happened to it, the way the mod's other
+	// Expansion notifications are sent (DZOAdminWorld.SendExpansion).
+	protected static void NotifyOwners(ExpansionGarageVehicleData vehicleData, string text)
+	{
+		if (!vehicleData.m_OwnerUIDs)
+			return;
+		string displayName = ExpansionStatic.GetItemDisplayNameWithType(vehicleData.m_ClassName);
+		foreach (string uid : vehicleData.m_OwnerUIDs)
+		{
+			PlayerBase p = PlayerBase.GetPlayerByUID(uid);
+			if (p && p.GetIdentity())
+				ExpansionNotification("Server", "Your " + displayName + " " + text, "", ARGB(255, 52, 152, 219), 7, ExpansionNotificationType.GARAGE).Create(p.GetIdentity());
+		}
+	}
+
+	// Takes a stored vehicle out of its garage and puts it on the ground at x/z.
+	static string Retrieve(DZOAdminCommand c)
+	{
+		ExpansionGarageData garageData;
+		ExpansionGarageVehicleData vehicleData;
+		if (!FindStored(c.vehicle, garageData, vehicleData))
+			return "stored vehicle not found";
+		float size = GetGame().GetWorld().GetWorldSize();
+		if (c.x < 0 || c.z < 0 || c.x > size || c.z > size)
+			return "position is outside the world";
+		EntityAI entity;
+		if (!Restore(vehicleData, entity))
+			return "could not restore it from its storage file";
+		DZOAdminWorld.PlaceVehicle(entity, c.x, c.z);
+		// Best effort, the return is not checked: the restore left the file (Restore keeps it until
+		// here so a failed action cannot lose the vehicle), and Expansion's own LoadVehicle deletes
+		// it the same way once the vehicle is out. When it stays, the vehicle is in the world anyway.
+		DeleteFile(vehicleData.GetEntityStorageFileName());
+		garageData.RemoveVehicle(vehicleData);
+		garageData.Save();
+		NotifyOwners(vehicleData, "was taken out of the garage by an admin");
+		return "";
+	}
+
+	// Moves the spawn point of a stored vehicle: where it stands when its owner takes it out.
+	static string Move(DZOAdminCommand c)
+	{
+		ExpansionGarageData garageData;
+		ExpansionGarageVehicleData vehicleData;
+		if (!FindStored(c.vehicle, garageData, vehicleData))
+			return "stored vehicle not found";
+		float size = GetGame().GetWorld().GetWorldSize();
+		if (c.x < 0 || c.z < 0 || c.x > size || c.z > size)
+			return "position is outside the world";
+		Object blocking;
+		if (!ExpansionItemSpawnHelper.IsSpawnPositionFree(Vector(c.x, DZOAdminWorld.TopY(c.x, c.z), c.z), vehicleData.m_Orientation, vehicleData.m_ClassName, blocking))
+		{
+			string displayName;
+			PlayerBase blockingPlayer = PlayerBase.Cast(blocking);
+			if (blockingPlayer && blockingPlayer.GetIdentity())
+				displayName = blockingPlayer.GetIdentityName(); // so the owner knows who stands there
+			else if (blocking)
+				displayName = blocking.GetDisplayName();
+			return "the spawn point is blocked by " + displayName;
+		}
+		EntityAI entity;
+		if (!Restore(vehicleData, entity))
+			return "could not restore it from its storage file";
+		DZOAdminWorld.PlaceVehicle(entity, c.x, c.z); // keeps the stored orientation
+		if (!ExpansionEntityStorageModule.SaveToFile(entity, vehicleData.GetEntityStorageFileName()))
+		{
+			GetGame().ObjectDelete(entity);
+			return "could not save the vehicle back; its spawn point is unchanged";
+		}
+		// The garage entry gets the new place, the way Expansion's SetDataFromVehicleObject does:
+		// the stored y is the model zero point (the vehicle's lowest point), not where the physics sits.
+		float modelZeroPoint = 0;
+		ExpansionVehicle ev;
+		if (ExpansionVehicle.Get(ev, entity))
+			modelZeroPoint = ev.GetModelZeroPointDistanceFromGround();
+		vector p = entity.GetPosition();
+		vehicleData.m_Position = Vector(p[0], p[1] - modelZeroPoint, p[2]);
+		vehicleData.m_Orientation = entity.GetOrientation();
+		garageData.Save();
+		GetGame().ObjectDelete(entity);
+		NotifyOwners(vehicleData, "had its garage spawn point moved by an admin");
+		return "";
+	}
 }
 #endif
