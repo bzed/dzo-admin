@@ -86,14 +86,20 @@ class DZOAdminGarage
 
 	// Brings a stored vehicle back into the world from its entity-storage file, at the place its
 	// garage entry keeps. deleteRestored = false is the safety net: the file survives a failed
-	// action, so the vehicle is not lost when what follows goes wrong.
-	protected static bool Restore(ExpansionGarageVehicleData vehicleData, out EntityAI entity)
+	// action, so the vehicle is not lost when what follows goes wrong. The placeholder (the
+	// invisible marker left where the vehicle was stored) is only deleted on request: its delete
+	// removes the entity-storage file in the next frame (EEDelete), which Retrieve wants (it is
+	// done with the file) but Move must not (it writes the vehicle back to that very file).
+	protected static bool Restore(ExpansionGarageVehicleData vehicleData, out EntityAI entity, bool deletePlaceholder)
 	{
 		ExpansionEntityStoragePlaceholder placeholder = ExpansionEntityStoragePlaceholder.GetByStoredEntityGlobalID(vehicleData.m_GlobalID);
 		if (!ExpansionEntityStorageModule.RestoreFromFile(vehicleData.GetEntityStorageFileName(), entity, placeholder, null, false))
 			return false;
+		if (!entity)
+			return false; // a corrupt storage file can restore without creating the entity
 		// The placeholder is invisible and damage-immune; the vehicle carries its cargo again.
-		if (placeholder)
+		// (There is none when the garage stores the cargo virtually.)
+		if (deletePlaceholder && placeholder)
 			placeholder.Delete();
 		return true;
 	}
@@ -124,7 +130,7 @@ class DZOAdminGarage
 		if (c.x < 0 || c.z < 0 || c.x > size || c.z > size)
 			return "position is outside the world";
 		EntityAI entity;
-		if (!Restore(vehicleData, entity))
+		if (!Restore(vehicleData, entity, true))
 			return "could not restore it from its storage file";
 		DZOAdminWorld.PlaceVehicle(entity, c.x, c.z);
 		// Best effort, the return is not checked: the restore left the file (Restore keeps it until
@@ -158,12 +164,20 @@ class DZOAdminGarage
 				displayName = blocking.GetDisplayName();
 			return "the spawn point is blocked by " + displayName;
 		}
+		// The placeholder is kept alive for now: deleting it would remove the entity-storage file
+		// in the next frame (EEDelete) - the very file the vehicle is written back to below.
+		ExpansionEntityStoragePlaceholder placeholder = ExpansionEntityStoragePlaceholder.GetByStoredEntityGlobalID(vehicleData.m_GlobalID);
 		EntityAI entity;
-		if (!Restore(vehicleData, entity))
+		if (!Restore(vehicleData, entity, false))
 			return "could not restore it from its storage file";
 		DZOAdminWorld.PlaceVehicle(entity, c.x, c.z); // keeps the stored orientation
 		if (!ExpansionEntityStorageModule.SaveToFile(entity, vehicleData.GetEntityStorageFileName()))
 		{
+			// The restore moved the cargo from the placeholder onto the vehicle; put it back the way
+			// Expansion's own restore failure does, so it does not die with the vehicle. If that
+			// fails too, the cargo is lost, but the file still holds the old (working) state.
+			if (placeholder && entity.HasAnyCargo() && !MiscGameplayFunctions.Expansion_MoveCargo(entity, placeholder))
+				EXError.Error(null, "Couldn't move cargo from " + entity + " back to placeholder " + placeholder);
 			GetGame().ObjectDelete(entity);
 			return "could not save the vehicle back; its spawn point is unchanged";
 		}
@@ -177,6 +191,10 @@ class DZOAdminGarage
 		vehicleData.m_Position = Vector(p[0], p[1] - modelZeroPoint, p[2]);
 		vehicleData.m_Orientation = entity.GetOrientation();
 		garageData.Save();
+		// The placeholder follows the spawn point, then the vehicle object goes away again; the
+		// placeholder stays and marks the new place for the next retrieve.
+		if (placeholder)
+			placeholder.SetPosition(entity.GetPosition());
 		GetGame().ObjectDelete(entity);
 		NotifyOwners(vehicleData, "had its garage spawn point moved by an admin");
 		return "";
