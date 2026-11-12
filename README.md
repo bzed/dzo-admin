@@ -45,9 +45,17 @@ State fields are only present when due (players every `players_s`, vehicles
 every `vehicles_s`, markers every `markers_s`, events every `events_s`); the
 first sync after a start has `"hello": true` and carries everything. The reply
 is `{"ok": true, "protocol": 1, "commands": [...]}`. Commands: `message`,
-`teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_move`, `vehicle_delete`, `flag_raise`; the field list is
+`teleport`, `spawn_item`, `spawn_vehicle`, `vehicle_repair`, `vehicle_flip`, `vehicle_move`, `vehicle_delete`,
+`storedvehicle_retrieve`, `storedvehicle_move`, `flag_raise`; the field list is
 `DZOAdminCommand` in `Proto.c`. A command id the mod has already executed is
 answered from memory, not executed again.
+
+Vehicles stored in DayZ Expansion's virtual garage (hello feature `garage`)
+are reported in the vehicles part with `stored` (true; the vehicle is not in
+the world), `stored_by` (the Steam ID of the player whose garage holds it),
+`territory_id` (the territory of the garage, 0 = none), `owners` (the Steam
+IDs that may retrieve it) and `broken` (its entity-storage file is missing, it
+can never come back).
 
 ## Event feed
 

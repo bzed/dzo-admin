@@ -39,6 +39,11 @@ class DZOAdminVehicle
 	ref array<string> occupants;
 	string owner;      // DayZ Expansion: the name on the key chain, when it is loaded
 	bool covered;      // DayZ Expansion: stored under a cover, only its class and place are known
+	bool stored;              // DayZ Expansion: stored in the virtual garage, not in the world
+	string stored_by;         // DayZ Expansion: the Steam ID of the player whose garage holds it
+	int territory_id;         // DayZ Expansion: the territory of the garage (0 = none)
+	ref array<string> owners; // DayZ Expansion: the Steam IDs that may retrieve it
+	bool broken;              // DayZ Expansion: a missing entity-storage file (it can never come back)
 	string driver;       // Steam ID of the last player in the driver's seat since the mod started, "" when none
 	string driver_name;  // that player's name when they sat down
 	float driven_ago;    // seconds since then; 0 while they sit there
