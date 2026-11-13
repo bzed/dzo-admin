@@ -119,6 +119,36 @@ class DZOAdminGarage
 		}
 	}
 
+	// Puts a restored vehicle upright at x/z at the height it stands there, at rest, keeping its
+	// heading, and tells the clients where it now is (DZOAdminWorld.SyncVehicle). The garage cannot
+	// do what VehicleMove does, put it a metre above the surface and let the physics drop it: the
+	// entry and the entity-storage file keep the place the vehicle is at, and a restore spawns it
+	// exactly at that height, without snapping it to the surface - the unsettled height would come
+	// back as a vehicle standing in the air. Returns the y the vehicle's origin stands at.
+	protected static float PlaceStanding(EntityAI entity, float x, float z)
+	{
+		float restY;
+		if (BoatScript.Cast(entity))
+			restY = DZOAdminWorld.RestY(x, z); // floats, also under a bridge
+		else
+			restY = DZOAdminWorld.TopY(x, z);
+		float modelZeroPoint = 0;
+		ExpansionVehicle ev;
+		if (ExpansionVehicle.Get(ev, entity))
+			modelZeroPoint = ev.GetModelZeroPointDistanceFromGround();
+		vector pos = Vector(x, restY + modelZeroPoint, z);
+		float yaw = entity.GetOrientation()[0];
+		entity.SetPosition(pos);
+		entity.SetOrientation(Vector(yaw, 0, 0));
+		Physics ph = entity.GetPhysics();
+		if (ph)
+			ph.SetVelocity("0 0 0");
+		dBodySetAngularVelocity(entity, "0 0 0");
+		dBodyActive(entity, ActiveState.ACTIVE);
+		DZOAdminWorld.SyncVehicle(entity);
+		return pos[1];
+	}
+
 	// Takes a stored vehicle out of its garage and puts it on the ground at x/z.
 	static string Retrieve(DZOAdminCommand c)
 	{
@@ -132,7 +162,7 @@ class DZOAdminGarage
 		EntityAI entity;
 		if (!Restore(vehicleData, entity, true))
 			return "could not restore it from its storage file";
-		DZOAdminWorld.PlaceVehicle(entity, c.x, c.z);
+		PlaceStanding(entity, c.x, c.z);
 		// Best effort, the return is not checked: the restore left the file (Restore keeps it until
 		// here so a failed action cannot lose the vehicle), and Expansion's own LoadVehicle deletes
 		// it the same way once the vehicle is out. When it stays, the vehicle is in the world anyway.
@@ -170,7 +200,9 @@ class DZOAdminGarage
 		EntityAI entity;
 		if (!Restore(vehicleData, entity, false))
 			return "could not restore it from its storage file";
-		DZOAdminWorld.PlaceVehicle(entity, c.x, c.z); // keeps the stored orientation
+		// Where the vehicle stands at the new place, the height included (PlaceStanding): the file and
+		// the entry below keep this place, and a restore spawns the vehicle exactly at its height.
+		float standingY = PlaceStanding(entity, c.x, c.z); // keeps the stored orientation
 		if (!ExpansionEntityStorageModule.SaveToFile(entity, vehicleData.GetEntityStorageFileName()))
 		{
 			// The restore moved the cargo from the placeholder onto the vehicle; put it back the way
@@ -187,8 +219,7 @@ class DZOAdminGarage
 		ExpansionVehicle ev;
 		if (ExpansionVehicle.Get(ev, entity))
 			modelZeroPoint = ev.GetModelZeroPointDistanceFromGround();
-		vector p = entity.GetPosition();
-		vehicleData.m_Position = Vector(p[0], p[1] - modelZeroPoint, p[2]);
+		vehicleData.m_Position = Vector(c.x, standingY - modelZeroPoint, c.z);
 		vehicleData.m_Orientation = entity.GetOrientation();
 		garageData.Save();
 		// The placeholder follows the spawn point, then the vehicle object goes away again; the

@@ -60,10 +60,15 @@ garage, 0 = none), `owners` (the BI GUIDs that may retrieve it) and `broken`
 (its entity-storage file is missing, it can never come back). Two commands
 act on them, both with the fields `vehicle`
 (the stored vehicle's id), `x` and `z`: `storedvehicle_retrieve` takes it out
-of the garage and puts it on the ground at `x`/`z` (it keeps its content and
-damage, the owners are notified), `storedvehicle_move` moves its spawn point
-to `x`/`z` (where it stands when an owner retrieves it; refused while the
-spawn point is blocked).
+of the garage and puts it standing on the ground at `x`/`z` (it keeps its
+content and damage, the owners are notified), `storedvehicle_move` moves its
+spawn point to `x`/`z` (where it stands when an owner retrieves it; refused
+while the spawn point is blocked). Both place the vehicle at the height it
+stands at there and tell the clients where it now is
+(`Transport.Synchronize`): a restore spawns a vehicle exactly at the height
+its entry keeps, without snapping it to the surface, so the height has to be
+the ground's, and a move of a vehicle nobody sits in does not reach the
+clients by itself.
 
 ## Event feed
 

@@ -590,6 +590,7 @@ class DZOAdminWorld
 		e.SetOrientation(Vector(yaw, 0, 0));
 		dBodySetAngularVelocity(e, "0 0 0");
 		dBodyActive(e, ActiveState.ACTIVE);
+		SyncVehicle(e);
 	}
 
 	protected static void FillFluid(CarScript car, CarFluid fluid)
@@ -669,6 +670,16 @@ class DZOAdminWorld
 	// the physics settling can hurt them otherwise.
 	static const int MOVE_PROTECT_MS = 3000;
 
+	// Tells the clients where a vehicle the server has moved now is: the simulation of a vehicle
+	// nobody sits in does not run, so a move of it reaches the clients only through this
+	// (Transport.Synchronize), not by itself.
+	static void SyncVehicle(EntityAI e)
+	{
+		Transport t;
+		if (Class.CastTo(t, e))
+			t.Synchronize();
+	}
+
 	// Puts a vehicle upright on the ground at x/z, at rest, keeping its heading. A boat floats (RestY),
 	// anything else stands on the highest surface (TopY). Used by VehicleMove and by the garage actions,
 	// which put a restored vehicle down the same way (DZOAdminGarage).
@@ -688,6 +699,7 @@ class DZOAdminWorld
 			ph.SetVelocity("0 0 0");
 		dBodySetAngularVelocity(e, "0 0 0");
 		dBodyActive(e, ActiveState.ACTIVE);
+		SyncVehicle(e);
 	}
 
 	// Puts a vehicle on the ground at x/z, upright, at rest, keeping its heading. A vehicle with players
