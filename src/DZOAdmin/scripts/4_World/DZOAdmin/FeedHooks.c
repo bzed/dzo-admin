@@ -33,15 +33,10 @@ class DZOAdminFeedHooks
 		if (!DZOAdminFeed.On() || !base || byConnectedPart)
 			return;
 		float now = GetGame().GetTickTime();
-		if (player)
-		{
-			s_RaidBase = base;
-			s_RaidTime = now;
-		}
-		else if (s_RaidBase == base && Math.AbsFloat(now - s_RaidTime) < 0.1)
-		{
+		if (!player && s_RaidBase == base && Math.AbsFloat(now - s_RaidTime) < 0.1)
 			return;
-		}
+		s_RaidBase = base;
+		s_RaidTime = now;
 		DZOAdminFeed.Add(Build("destroy", base, player, part));
 	}
 
