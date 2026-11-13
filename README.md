@@ -53,10 +53,12 @@ answered from memory, not executed again.
 
 Vehicles stored in DayZ Expansion's virtual garage (hello feature `garage`)
 are reported in the vehicles part with `stored` (true; the vehicle is not in
-the world), `stored_by` (the Steam ID of the player whose garage holds it),
-`territory_id` (the territory of the garage, 0 = none), `owners` (the Steam
-IDs that may retrieve it) and `broken` (its entity-storage file is missing, it
-can never come back). Two commands act on them, both with the fields `vehicle`
+the world), `stored_by` (the BI GUID of the player whose garage holds it: the
+hashed Steam ID `PlayerIdentity.GetId()` reports, which is what Expansion
+stores - not the plain Steam ID), `territory_id` (the territory of the
+garage, 0 = none), `owners` (the BI GUIDs that may retrieve it) and `broken`
+(its entity-storage file is missing, it can never come back). Two commands
+act on them, both with the fields `vehicle`
 (the stored vehicle's id), `x` and `z`: `storedvehicle_retrieve` takes it out
 of the garage and puts it on the ground at `x`/`z` (it keeps its content and
 damage, the owners are notified), `storedvehicle_move` moves its spawn point

@@ -68,7 +68,7 @@ class DZOAdminGarage
 				v.z = vd.m_Position[2];
 				v.yaw = vd.m_Orientation[0];
 				v.stored = true;
-				v.stored_by = garage.m_OwnerUID;
+				v.stored_by = garage.m_OwnerUID; // a BI GUID: the garage keeps hashed IDs, not Steam IDs
 				v.territory_id = garage.m_TerritoryID;
 				if (v.territory_id < 0)
 					v.territory_id = 0; // no territory
