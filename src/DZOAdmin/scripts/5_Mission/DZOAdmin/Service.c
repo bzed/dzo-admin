@@ -9,6 +9,7 @@ class DZOAdminTypeFeed
 	protected ref array<string> m_List;
 	protected string m_Hash;
 	protected int m_Sent;
+	protected int m_Prev;
 
 	void DZOAdminTypeFeed(bool vehicles)
 	{
@@ -19,6 +20,12 @@ class DZOAdminTypeFeed
 	void Restart()
 	{
 		m_Sent = 0;
+	}
+
+	// The chunk of an unanswered request goes out again; if it was the last, dzo would never ask for it.
+	void Retry()
+	{
+		m_Sent = m_Prev;
 	}
 
 	// Next returns the next chunk of the list, or null when all of it was sent.
@@ -45,6 +52,7 @@ class DZOAdminTypeFeed
 				chars += t.Length();
 			m_Hash = m_List.Count().ToString() + ":" + chars.ToString();
 		}
+		m_Prev = m_Sent;
 		if (m_Sent >= m_List.Count())
 			return null;
 		DZOAdminTypes ty = new DZOAdminTypes();
@@ -148,6 +156,9 @@ class DZOAdminService
 			m_Items.Restart();
 			m_Vehicles.Restart();
 		}
+		// The hello is only done once dzo answered the request that carried it.
+		if (m_Transport.m_LastOk)
+			m_Hello = false;
 		if (m_Transport.m_WantHello)
 		{
 			m_Hello = true;
@@ -160,7 +171,11 @@ class DZOAdminService
 		if (m_Transport.m_LastOk)
 			DZOAdminFeed.Ack();
 		else
+		{
 			DZOAdminFeed.Retry();
+			m_Items.Retry();
+			m_Vehicles.Retry();
+		}
 		float now = GetGame().GetTickTime();
 		DZOAdminSync s = new DZOAdminSync();
 		s.token = m_Config.token;
@@ -242,7 +257,6 @@ class DZOAdminService
 				s.results.Insert(r);
 		}
 		m_Seq++;
-		m_Hello = false;
 		m_Transport.Send(s);
 		// A failed send drops this batch: state is re-pushed on the next
 		// interval, and dzo asks again for results it never saw (it
