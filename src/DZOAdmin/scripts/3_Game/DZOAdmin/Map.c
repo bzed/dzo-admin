@@ -188,9 +188,14 @@ class DZOAdmin_Map
 			s_Tracked.Remove(k);
 			s_Expires.Remove(k);
 		}
+		// A tracked entity without a delete hook (a player, an animal) is null
+		// once it is deleted: drop its marker here.
+		array<string> orphaned = new array<string>;
 		foreach (string tkey, Object o : s_Tracked)
 		{
 			DZOAdminMarker t;
+			if (!o)
+				orphaned.Insert(tkey);
 			if (o && s_Markers.Find(tkey, t))
 			{
 				vector p = o.GetPosition();
@@ -198,6 +203,12 @@ class DZOAdmin_Map
 				t.y = p[1];
 				t.z = p[2];
 			}
+		}
+		foreach (string gkey : orphaned)
+		{
+			s_Markers.Remove(gkey);
+			s_Tracked.Remove(gkey);
+			s_Expires.Remove(gkey);
 		}
 		foreach (string mkey, DZOAdminMarker m : s_Markers)
 		{

@@ -79,7 +79,11 @@ class DZOAdminWatch
 		DZOAdmin_Map.OnEntityDeleted(e);
 		if (s_Watched.Count() == 0)
 			return;
-		foreach (string layer, array<EntityAI> list : s_Watched)
+		int idx = RuleFor(e.GetType());
+		if (idx < 0)
+			return;
+		array<EntityAI> list;
+		if (s_Watched.Find(s_Rules.Get(idx).layer, list))
 			list.RemoveItem(e);
 	}
 
