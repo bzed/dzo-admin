@@ -20,7 +20,7 @@ class DZOAdminKits
 {
 	protected static ref map<string, ref TStringArray> s_Kits;
 	protected static ref array<string> s_Classes;
-	protected static float s_Rebuilt;
+	protected static bool s_FromCache;
 
 	// Fingerprint of a class list: any added, removed or renamed class changes it.
 	static string Fingerprint(array<string> classes)
@@ -54,10 +54,12 @@ class DZOAdminKits
 					halves.Get(1).Split(",", parts);
 					s_Kits.Insert(halves.Get(0), parts);
 				}
+				s_FromCache = true;
 				Print("[DZOAdmin] kits: " + s_Kits.Count().ToString() + " classes from the cache");
 				return;
 			}
 		}
+		s_FromCache = false;
 		Rebuild(classes, hash);
 		Print("[DZOAdmin] kits: scanned " + classes.Count().ToString() + " classes, " + s_Kits.Count().ToString() + " have a kit");
 	}
@@ -210,12 +212,12 @@ class DZOAdminKits
 
 	// Fit creates the parts of the kit on an item, and the parts' own kits, a few levels deep. A part
 	// that no longer fits its slot means the cache is out of date (a mod changed without the class list
-	// changing): the kits are scanned again, at most once in ten minutes.
+	// changing): if the kits came from the cache, they are scanned again, once per start.
 	static void Fit(EntityAI item, int depth)
 	{
-		if (!FitParts(item, depth) && s_Classes && GetGame().GetTickTime() - s_Rebuilt > 600)
+		if (!FitParts(item, depth) && s_FromCache && s_Classes)
 		{
-			s_Rebuilt = GetGame().GetTickTime();
+			s_FromCache = false;
 			Print("[DZOAdmin] kits: a part did not fit, scanning the configs again");
 			Rebuild(s_Classes, Fingerprint(s_Classes));
 		}
