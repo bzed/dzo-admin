@@ -795,6 +795,45 @@ class DZOAdminWorld
 		}
 	}
 
+	// "" when the vehicle may be deleted, else the error to send back. In 1.30,
+	// ObjectDelete on a vehicle with someone inside crashes the server.
+	static string VehicleDeleteError(Transport t, bool force)
+	{
+		bool occupied = false;
+		for (int i = 0; i < t.CrewSize(); i++)
+		{
+			if (t.CrewMember(i))
+				occupied = true;
+		}
+		array<Man> men = new array<Man>;
+		GetGame().GetPlayers(men);
+		foreach (Man m : men)
+		{
+			Human h = Human.Cast(m);
+			if (!h)
+				continue;
+			HumanCommandVehicle hcmd = h.GetCommand_Vehicle();
+			if (hcmd && hcmd.GetTransport() == t)
+				occupied = true;
+			if (h.GetParent() == t)
+				occupied = true;
+		}
+		if (!occupied)
+			return "";
+		if (!force)
+			return "vehicle has crew inside";
+		for (int j = 0; j < t.CrewSize(); j++)
+		{
+			Human occupant = t.CrewMember(j);
+			if (!occupant)
+				continue;
+			HumanCommandVehicle ocmd = occupant.GetCommand_Vehicle();
+			if (ocmd && !ocmd.IsGettingOut())
+				ocmd.GetOutVehicle();
+		}
+		return "crew ordered out, delete again when the vehicle is empty";
+	}
+
 	static string VehicleDelete(DZOAdminCommand c)
 	{
 		CarScript car = FindVehicle(c.vehicle);
@@ -803,23 +842,26 @@ class DZOAdminWorld
 			MotorbikeScript bike = DZOAdminBikes.Find(c.vehicle);
 			if (bike)
 			{
-				if (!c.force && bike.IsAnyCrewPresent())
-					return "vehicle has crew inside";
+				string bikeErr = VehicleDeleteError(bike, c.force);
+				if (bikeErr != "")
+					return bikeErr;
 				GetGame().ObjectDelete(bike);
 				return "";
 			}
 			BoatScript boat = DZOAdminBoats.Find(c.vehicle);
 			if (boat)
 			{
-				if (!c.force && boat.IsAnyCrewPresent())
-					return "vehicle has crew inside";
+				string boatErr = VehicleDeleteError(boat, c.force);
+				if (boatErr != "")
+					return boatErr;
 				GetGame().ObjectDelete(boat);
 				return "";
 			}
 			return "vehicle not found";
 		}
-		if (!c.force && car.IsAnyCrewPresent())
-			return "vehicle has crew inside";
+		string carErr = VehicleDeleteError(car, c.force);
+		if (carErr != "")
+			return carErr;
 		GetGame().ObjectDelete(car);
 		return "";
 	}
